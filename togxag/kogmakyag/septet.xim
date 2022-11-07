@@ -1,0 +1,233 @@
+#title "亡き王女の為のセプテット
+#copy "上海アリス幻樂団/ZUN
+
+t132 !0@56v32 !1@60 !2@0v127 !3@0v127 !4@40 !5@41 !6@42 !7@43
+;t132 !0@127v32 !1@127 !2@127 !3@127 !4@127 !5@127 !6@127 !7@127
+
+!0 [r1]3
+!1 [r1]3
+!2 [r1]2
+!2 o5 r2re-&>g
+!3 o3 [g.&c.g.&c.a-&d]3
+!4 o4 [rg<e-d8>f8]3
+!5 o4 [re-gf]3
+!6 o3 [c.c.d]3
+!7 o3 [c2.d]3
+
+!0 r1
+!1 r1
+!2 r.<d.&>f.f&d
+!3 g.&c.g.&c.g&>b-
+!4 rg.<e-.
+!5 re-.&>g.g.&c.
+!6 c.c.>b-
+!7 c1
+
+!0 [r1]3
+!1 [r1]3
+!2 [<c1&>g1&e-1/
+!2 b-1&g1&d1]2
+!3 <e-.&>a-.<e-.&>a-.<e-&>a-
+!3 <f.&>b-.<f.&>b-.<f&>b-
+!3 <g.&c.g.&c.a-&d
+!4 [r>g<e-d8>f8<]3
+!5 [r<e-gf>]3
+!6 a-.a-.a-
+!6 b-.b-.b-
+!6 <c.c.d
+!7 >a-1
+!7 b-1
+!7 <c2.d
+
+!0 r1
+!1 o4 r2r8d8g8a8
+!2 r1
+!3 g.&c.d8e-8>b-8<c16>f16e-16d16
+!4 >g2r8g8<c8d8
+!5 <e-2&>g2r2
+!6 c2r2
+!7 c2r2
+
+!0 r1
+!1 b-.<c8>a.b-8
+!2 r1
+!3 l8 c<cg<e-&c>>>b-<b-<g<e-&c
+!4 e-.f8d.e-8
+!5 l8 [g<e-&c>]4
+!6 cc>b-b-
+!7 c2>b-2
+
+!0 r1
+!1 g2r8d8g8a8
+!2 r1
+!3 >>>a-<a-<e-g<e-&c>ge->b-
+!4 c2r8>g8<c8d8
+!5 >[e-<c&>g]4
+!6 a-a-a-b-
+!7 a-2.r
+
+!0 r1
+!1 b-.<c8>a.<f8
+!2 r1
+!3 >c<cg<e-&c>>>b-<b-<g<e-&c
+!4 e-.f8d.b-8
+!5 [g<e-&c>]4
+!6 <cc>b-b-
+!7 <c2>b-2
+
+!0 r1
+!1 d2r8d8f8g8
+!2 r1
+!3 >>>a<a<e-g<e-&c>ge->a
+!4 g2r8g8b-8<c8
+!5 >[e-<c&>g]2[<e-&c>g]2
+!6 aaaa
+!7 a2.a
+
+!0 r1
+!1 ccr8c8d8f8
+!2 r1
+!3 f<cfa-<f&c>a-c>f
+!4 >ffr8f8g8b-8
+!5 [<cf&>a-]4
+!6 ffff
+!7 f2<f2
+
+!0 r1
+!1 >b-b-r8g8g8a8
+!2 r1
+!3 e-b-<e-g<e-&>b-e->b-e-
+!4 e-e-r8c8c8d8
+!5 [b-<e-&>g]4
+!6 e-e-e-e-
+!7 e-2e-2
+
+!0 r1
+!1 b-.<c8>a.f#8
+!2 r1
+!3 f<cf<e-&>a->g<dg<f&>b
+!4 e-.f8d.>b8
+!5 [ca-]2[db]2
+!6 e-e-ff
+!7 f2g>g
+
+!0 r1
+!1 g2a2
+!2 r1
+!3 >a-<e-a-<g&c>>b-<fb-<b-&d
+!4 <c2d2
+!5 [e-<c>]2f<d>fd
+!6 a-a-b-b-
+!7 a-2b-2
+
+!0 r1
+!1 b-2r2
+!2 r1
+!3 l16 >>c4.c<c>c2
+!4 l16 e-2~e-8de-d>b-ga-
+!5 l16 cde-g<cde-g>cde-a-<cde-a-
+!6 l16 [g&c]8[a-&c]8
+!7 <c1
+
+!0 r1
+!1 r1
+!2 r1
+!3 r4.c<c>c2
+!4 a2.r4
+!5 >cde-a<cde-a>cde-a-<cde-a-
+!6 [a&c]8[a-&c]8
+!7 r1
+
+!0 r1
+!1 r1
+!2 l16 r4cde-gr4cde-a-
+!3 <cde-gr4cde-a-r4
+!4 r1
+!5 r1
+!6 [g&c]8[a-&c]8
+!7 r1
+
+!0 r1
+!1 r1
+!2 r4cde-ar4cde-a-
+!3 cde-ar4cde-a-r4
+!4 r1
+!5 r1
+!6 [a&c]8[a-&c]8
+!7 r1
+
+!0 r1
+!1 r1
+!2 r1
+!3 r1
+!4 r1
+!5 >cde-g<cde-g>cde-a-<cde-a-
+!6 [g&c]8[a-&c]8
+!7 c1
+
+!0 r1
+!1 r1
+!2 r1
+!3 r1
+!4 r1
+!5 >cde-a<cde-a>cde-a-<cde-a-
+!6 [a&c]8[a-&c]8
+!7 r1
+
+!0 l16 o5 f2~f8edc>b-ag
+!1 r1
+!2 r4cde-gr4cde-a-
+!3 cde-gr4cde-a-r4
+!4 <<e-2~e-8dc>b-a-gf
+!5 <e-2~e-8dc>b-a-gf
+!6 [g&c]8[a-&c]8
+!7 r1
+
+!0 l2 br
+!1 r1
+!2 l8 a2&e-2r>g<cd
+!3 l2 c&>c<a8d8e-16f16e-16d16
+!4 l8 a2r>g<cd
+!5 e-2&>g2r2
+!6 l8 a2&c2r2
+!7 r2r8g8g
+
+!0 a<c
+!1 l2 b-a
+!2 e-4.&c4.fd4.&>b-4.<e-
+!3 g&cg&e-
+!4 e-4.fd4.e-
+!5 <g8<e-dr>fge-g8<e-dr>fe-8
+!6 <[cg]2[>b-<f]2
+!7 <cc>b-b-
+
+!0 >a.r4
+!1 g.r4
+!2 c2&>g2rg<cd
+!3 e-&>a-r
+!4 c2~c>g<cd
+!5 g8<e-drf8gd8e->b-8<c>f
+!6 [>a-<e-]4
+!7 a-a-a-a-
+
+!0 a<c
+!1 b-<d
+!2 e-4.&c4.fd4.&>b-4.<b-
+!3 <g&cg&e-
+!4 e-4.fd4.b-
+!5 g8<e-dr>fge-g8<e-dr>fe-8
+!6 [cg]2[>b-<f]2
+!7 <cc>b-b-
+
+!0 d.r4
+!1 d.r4
+!2 g2&c2rg&e-b-&f<c&>g
+!3 e-&>ar
+!4 g2~ggb-<c
+!5 g8<e-d8>b-8<cf8e-d8>b-f8
+!6 [>a<g]4
+!7 [a]4
+
+!0 d.d4
+!1 e-.c4
+!2 f4f4

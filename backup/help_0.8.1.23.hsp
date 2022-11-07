@@ -1,0 +1,1575 @@
+;*******************************************************************************
+; ワﾟイル名  : help.hsp
+; 更新年月日 : 平29/10/07
+; 作成者     : Taker32X
+; 作成年月日 : 平29/05/16
+; 機能       : xime.exe のヘルプ
+;*******************************************************************************
+
+;------------------------------------ TODO ------------------------------------
+;
+; 1. 複写機能を完全に。
+;
+; 2. FEP を完全に。
+;
+; 3. 検索機能を完全に。
+;
+;------------------------------------------------------------------------------
+
+#const MAJOR_VER 0
+#const MINOR_VER 8
+#const PATCH_VER 1
+#define VERSION_NUMBER (StrF("%%d.%%d.%%d.%%d",MAJOR_VER,MINOR_VER,PATCH_VER,build_num))
+#define PROJECT_NAME ("help")
+
+#ifdef _DEBUG
+
+*Build
+	Exist PROJECT_NAME+"_ver
+	If strsize!=-1{
+		NoteSel work
+			NoteLoad PROJECT_NAME+"_ver
+		NoteUnsel
+		work=Str(Int(work)+1)
+	}Else{
+		work="1
+	}
+	NoteSel work
+		NoteSave PROJECT_NAME+"_ver
+	NoteUnsel
+	build_num=Int(work)
+	NoteSel work
+		NoteLoad __FILE__
+		NoteSave "backup\\"+GetPath(__FILE__,1)+"_"+VERSION_NUMBER+GetPath(__FILE__,2)
+	NoteUnsel
+
+#else
+
+	build_num=1
+
+#endif
+
+#include "hsp3utf.as
+#include "hspext.as
+#include "llmod3/llmod3.hsp
+#include "llmod3/trackbox.hsp
+
+#undef CnvStoA
+
+#module
+
+#defcfunc CnvStoA str p1
+	CnvStoA@hsp string,p1
+	Return string
+
+#global
+
+#undef StrMid
+#define GUI_X (240)
+#define GUI_Y (24)
+#define INI_FILE (dir_exe+"\\xime.ini")
+#define global BRACKET_A (StrF("%%c%%c",$C2,$AB))
+#define global BRACKET_B (StrF("%%c%%c",$C2,$BB))
+
+#define global STRFONT (MSGOTHIC)
+
+#uselib "user32
+#cfunc GetKeyState "GetKeyState" sptr
+#cfunc LoadIcon "LoadIconA" sptr,sptr
+
+#uselib "kernel32
+#cfunc GetPrivateProfileInt "GetPrivateProfileIntA" sptr,sptr,int,sptr
+#func WritePrivateProfileString "WritePrivateProfileStringA" sptr,sptr,sptr,sptr
+
+#uselib "gdi32
+#cfunc GetStockObject "GetStockObject" int
+
+#uselib "comctl32
+#cfunc ImageList_Create "ImageList_Create" sptr,sptr,sptr,sptr,sptr
+#func ImageList_AddIcon "ImageList_AddIcon" sptr,sptr
+
+#pack "helpdata.txt
+#pack "roma.txt
+#pack "kana.txt
+#pack "hangul.txt
+#pack "calendar.txt
+#pack "macro_ex.bmp
+#pack "program.bmp
+#packopt name help
+#packopt hide 1
+#packopt icon "help.ico
+#packopt version "version_help.txt
+#packopt lang "1041
+
+#module mod_123
+
+#define TAB 8
+
+#uselib "user32
+#func SetWindowPos "SetWindowPos" sptr,sptr,sptr,sptr,sptr,sptr,sptr
+#cfunc GetWindowLong "GetWindowLongA" int,int
+#func SetWindowLong "SetWindowLongA" int,int,int
+#cfunc GetSystemMenu "GetSystemMenu" int,nullptr
+#func DeleteMenu "DeleteMenu" int,int,nullptr
+#func EnableWindow "EnableWindow" int,int
+
+#uselib "kernel32
+#func Beep "Beep" int,int
+
+#defcfunc MultiStr str p1,int p2
+	work22="
+	Repeat Limit(p2,0)
+		work22+p1
+	Loop
+	Return work22
+
+#deffunc prints str p1,str p2,double p3
+	x=ginfo_cx:y=ginfo_cy
+	font p2,p3
+	string=p1
+	notesel string
+		null=0
+		for i,0,notemax
+			noteget test_data,i
+			char_2bytes=0
+			char_3bytes=0
+			char_4bytes=0
+			num_3bytes=0
+			repeat strlen(test_data)
+				dat_byte=peek(test_data,cnt)
+				If dat_byte==$00{
+					null=1
+					Break
+				}
+				if char_2bytes{
+					char_2bytes=0
+				}else: if char_3bytes{
+					if peek(test_data,cnt-1)==$EF{
+						if ($BD<=dat_byte&&$A1<=Peek(test_data,cnt+1))&&dat_byte<=$BE{
+							num_3bytes+
+						}
+					}
+					char_2bytes=1
+					char_3bytes=0
+				}else: if char_4bytes{
+					char_3bytes=1
+					char_4bytes=0
+				}else{
+					pos (0f+p3)*(cnt-num_3bytes)/2+x,p3*i+y
+					if $20<=dat_byte&&dat_byte<=$7E{
+						print strf("%c",dat_byte)
+					}else: if $C2<=dat_byte&&dat_byte<=$DF&&cnt<strlen(test_data)-1{
+						print strf("%c%c",dat_byte,peek(test_data,cnt+1))
+						char_2bytes=1
+					}else: if $E0<=dat_byte&&dat_byte<=$EF&&cnt<strlen(test_data)-2{
+						Switch dat_byte<<16 or peek(test_data,cnt+1)<<8 or peek(test_data,cnt+2)
+							Case $E3829B
+							Case $E3829C
+								num_3bytes+2
+								Pos ginfo_cx-0.375*p3,ginfo_cy
+								SwBreak
+						SwEnd
+						print strf("%c%c%c",dat_byte,peek(test_data,cnt+1),peek(test_data,cnt+2))
+						char_3bytes=1
+						num_3bytes+
+					}else: if $F0<=dat_byte&&dat_byte<=$F4&&cnt<strlen(test_data)-3{
+						print strf("%c%c%c%c",dat_byte,peek(test_data,cnt+1),peek(test_data,cnt+2),peek(test_data,cnt+3))
+						char_4bytes=1
+					}
+				}
+			loop
+			If null{
+				_Break
+			}
+		next
+		pos x,p3*notemax+y
+	noteunsel
+	return
+
+#deffunc printr str p1,str p4,str p2,int p3
+	string2=p1
+	string3=p4
+	x2=ginfo_cx:y2=ginfo_cy
+	notesel string3
+		repeat notemax
+			noteget note,cnt
+			pos x2,1.5*p3*cnt+y2
+			PrintS RepLarge(RepSimple(note,kanzi@,kana@),2),p2,0.5*p3
+		loop
+	noteunsel
+	notesel string2
+		repeat notemax
+			noteget note,cnt
+			pos x2,1.5*p3*cnt+y2+0.5*p3
+			PrintS RepLarge(RepSimple(note,kanzi@,kana@),kana@==0),p2,p3
+		loop
+	noteunsel
+	return
+
+#defcfunc GetNote str p1,int p2
+	final=p1
+	NoteSel final
+		NoteGet final2,p2
+	NoteUnsel
+	Return final2
+
+#defcfunc StrLen2 str p1
+	val=0
+	char_2bytes=0
+	char_3bytes=0
+	char_4bytes=0
+	num_3bytes=0
+	test_data=p1
+	repeat strlen(test_data)
+		dat_byte=peek(test_data,cnt)
+		If dat_byte==$00{
+			Break
+		}
+		if char_2bytes{
+			val+
+			char_2bytes=0
+		}else: if char_3bytes{
+			if peek(test_data,cnt-1)==$EF{
+				if ($BD<=dat_byte&&$A1<=Peek(test_data,cnt+1))&&dat_byte<=$BE{
+					num_3bytes+
+				}
+			}
+			val+
+			char_2bytes=1
+			char_3bytes=0
+		}else: if char_4bytes{
+			val+
+			char_3bytes=1
+			char_4bytes=0
+		}else{
+			if $20<=dat_byte&&dat_byte<=$7E{
+				val+
+			}else: if $C2<=dat_byte&&dat_byte<=$DF&&cnt<strlen(test_data)-1{
+				val+
+				char_2bytes=1
+			}else: if $E0<=dat_byte&&dat_byte<=$EF&&cnt<strlen(test_data)-2{
+				val+
+				char_3bytes=1
+				num_3bytes+
+				Switch dat_byte<<16 or peek(test_data,cnt+1)<<8 or peek(test_data,cnt+2)
+					Case $E3829B
+					Case $E3829C
+						num_3bytes+2
+						SwBreak
+				SwEnd
+			}else: if $F0<=dat_byte&&dat_byte<=$F4&&cnt<strlen(test_data)-3{
+				val+
+				char_4bytes=1
+			}
+		}
+	loop
+	Return val-num_3bytes
+
+#defcfunc StrLen3 str p1
+	Return StrLen2(p1)-num_3bytes
+
+#deffunc ShortCut int p1
+	If menuing@{
+		If 'A'<=p1&&p1<='Z'{
+			Repeat MenuSE(1)-MenuSE(0)+1,MenuSE(0)
+				LogMes Peek(menu(0,cnt),0)
+				If p1==Peek(menu(0,cnt),0){
+					HideMenu
+					If menu_point(0,cnt)!=-1{
+						ViewMenu menu_point(0,cnt),menu_point(1,cnt)
+					}Else{
+						GoSub menu_label(cnt)
+					}
+					Break
+				}
+			Loop
+		}
+	}Else: If searching@{
+		put=p1 and$FF
+		work="
+		If 'A'<=put&&put<='Z'||('0'<=put&&put<='9')||put==' '{
+			work=StrF("%c",put+('A'<=put&&put<='Z'&&(roma@!=0||kind@==0&&(p1 and$100)==0))*32-('1'<=put&&put<='9'&&(roma@!=0||kind@==0&&(p1 and$100)!=0))*16)
+		}Else: If $BA<=put&&put<=$BF{
+			work=StrF("%c",put-144+(shift!=0&&(kind@==0||roma@!=0))*16)
+		}Else: If $60<=put&&put<=$69{
+			work=StrF("%c",put-48)
+		}Else: If put==$C0||($DB<=put&&put<=$DE){
+			work=StrF("%c",put-128+(shift!=0&&(kind@==0||roma@!=0))*32)
+		}Else: If put==226{
+			work="_
+		}
+		If size@!=0&&work!=""{
+			work=HalfFull(work)
+		}
+		inpnot_text@+work
+		If kind@{
+			If roma@{
+				NoteSel roma_key@
+					Repeat NoteMax
+						NoteGet work,cnt
+						Split work,",",work
+						ForEach work
+							StrRep work(cnt),"{comma}","，
+						Loop
+						If kind@==1{
+							work(1)=KataXira(work(1))
+						}
+						StrRep inpnot_text@,work(0),work(1)
+					Loop
+				NoteUnsel
+			}Else{
+				NoteSel kana_key@
+					Repeat notemax
+						NoteGet work,cnt
+						Split work,",",work
+						ForEach work
+							StrRep work(cnt),"{comma}","，
+						Loop
+						If work(2)==""{
+							work(2)=work(1)
+						}
+						If kind@==1{
+							work(1+(shift!=0))=KataXira(work(1+(shift!=0)))
+						}
+						StrRep inpnot_text@,work(0),work(1+(shift!=0))
+					Loop
+				NoteUnsel
+			}
+		}
+	}
+	Switch p1
+		Case $008	; BS
+			If searching@{
+				If StrLen(inpnot_text@){
+					If StrLen(inpnot_text@)>=3{
+						If $E0<=Peek(inpnot_text@,StrLen(inpnot_text@)-3)&&Peek(inpnot_text@,StrLen(inpnot_text@)-3)<=$EF{
+							char_3bytes=1
+						}
+					}
+					inpnot_text@=StrMid(inpnot_text@,0,StrLen(inpnot_text@)-1-2*char_3bytes)
+				}Else: If StrLen(input_text@){
+					If StrLen(input_text@)>=3{
+						If $E0<=Peek(input_text@,StrLen(input_text@)-3)&&Peek(input_text@,StrLen(input_text@)-3)<=$EF{
+							char_3bytes=1
+						}
+					}
+					input_text@=StrMid(input_text@,0,StrLen(input_text@)-1-2*char_3bytes)
+				}
+			}Else: topping==0{
+				nest=Limit(nest-1,0)
+				page@=page_history(nest)
+				sel_menu@=0
+			}
+			SwBreak
+		Case $00D	; RETURN
+		Case $10D
+			If error@{
+				error@=0
+			}Else: If topping{
+				If menuing@{
+					HideMenu
+					If menu_point(0,choosing@)!=-1{
+						ViewMenu menu_point(0,choosing@),menu_point(1,choosing@)
+					}Else{
+						GoSub menu_label(choosing@)
+					}
+				}Else: If selecting@==1{
+					selecting@=2
+					selx@(1)=selx@
+					sely@(1)=sely@
+				}Else: If selecting@==2{
+					topping=0
+					selecting@=0
+					clip="
+					If square@{
+						Repeat abs(sely@(1)-sely@(0))+1,(sely@(0)>sely@(1))*sely@(1)+(sely@(0)>sely@(1)==0)*sely@(0)
+							clip+"\n
+							clip+StrMid2(GetNote(text@(page@),cnt),(selx@(0)>selx@(1))*selx@(1)+((selx@(0)>selx@(1))==0)*selx@(0),abs(selx@(1)-selx@(0))+1)
+						Loop
+						NoteSel clip
+							NoteDel 0
+						NoteUnsel
+					}Else{
+						
+					}
+					clipset@ clip
+				}
+			}Else: If page@<0{
+				page_history(nest)=page@
+				nest+
+				page@=sel_menu@
+				sel_menu@=0
+			}Else{
+				page_history(nest)=page@
+				nest+
+				page@=Int(Split2(Split2(link@(page@),";",sel_menu@),",",3))
+				sel_menu@=0
+			}
+			SwBreak
+		Case $01B	; ESC
+		Case $11B
+			If gInfo_Sel==0{
+				If menuing@{
+					HideMenu
+				}Else: If selecting@{
+					selecting@-1
+					If selecting@==0{
+						topping=0
+					}
+				}Else: If searching@{
+					searching@=0
+					topping=0
+				}Else: If error@{
+					error@=0
+				}Else{
+					End
+				}
+			}Else{
+				GoSub *Vofari@
+			}
+			SwBreak
+		Case $025	; LEFT
+			If menuing@{
+				If mstart==choosing@{
+					choosing@=mend
+				}Else{
+					choosing@-
+				}
+			}Else: If selecting@{
+				Repeat 3-selecting@
+					selx@(cnt+selecting@-1)=Limit(selx@(cnt+selecting@-1)-1,0)
+				Loop
+			}
+			SwBreak
+		Case $026	; UP
+			If selecting@{
+				Repeat 3-selecting@
+					sely@(cnt+selecting@-1)=Limit(sely@(cnt+selecting@-1)-1,0)
+				Loop
+			}Else: If error@==0{
+				If sel_menu@==0{
+					If page@>=0{
+						work=link@(page@)
+						Split work,";
+					}
+					sel_menu@=stat-1
+				}Else{
+					sel_menu@-
+				}
+			}
+			SwBreak
+		Case $027	; RIGHT
+			If menuing@{
+				If mend==choosing@{
+					choosing@=mstart
+				}Else{
+					choosing@+
+				}
+			}Else: If selecting@{
+				Repeat 3-selecting@
+					selx@(cnt+selecting@-1)=Limit(selx@(cnt+selecting@-1)+1,0,71)
+				Loop
+			}
+			SwBreak
+		Case $028	; DOWN
+			If selecting@{
+				Repeat 3-selecting@
+					sely@(cnt+selecting@-1)+
+				Loop
+			}Else: If error@==0{
+				If page@>=0{
+					work=link@(page@)
+					Split work,";
+				}
+				If sel_menu@==stat-1{
+					sel_menu@=0
+				}Else{
+					sel_menu@+
+				}
+			}
+			SwBreak
+		Case $02D
+			SwBreak
+		Case $070	; f･1
+;			ErrorMes "此機能は現在實裝してをりません。","このき　のぅ　　げんざいじっさぅ
+			If menuing@==0{
+				ViewMenu 2,3
+			}
+			SwBreak
+		Case $071	; f･2
+			ErrorMes "此機能は現在實裝してをりません。","このき　のぅ　　げんざいじっさぅ
+/*			If topping==0{
+				topping=1
+				selecting@=1
+				selx@=0
+				sely@=0
+				selx@(1)=0
+				sely@(1)=0
+			}*/
+			SwBreak
+		Case $072	; f･3
+			If menuing@==0{
+				square@^1
+			}
+			SwBreak
+		Case $073	; f･4
+;			ErrorMes "此機能は現在實裝してをりません。","このき　のぅ　　げんざいじっさぅ
+			If topping==0{
+				topping=1
+				searching@=1
+				input_text@="
+				inpnot_text@="
+			}
+			SwBreak
+		Case $075
+		Case $076
+		Case $077
+		Case $078
+		Case $079
+;			ErrorMes "此機能は現在實裝してをりません。","このき　のぅ　　げんざいじっさぅ
+			SwBreak
+		Case $0BE	; .
+			If selecting@==1{
+				selecting@=2
+				selx@(1)=selx@
+				sely@(1)=sely@
+			}
+			SwBreak
+		Case $170	; SHIFT+f･1
+			If menuing@==0{
+				gsel2@^1
+				gSel 0,gsel2@+1
+			}
+			SwBreak
+		Case $174	; SHIFT+f･5
+			input_text@+inpnot_text@
+			inpnot_text@="
+			roma@^1
+			SwBreak
+		Case $175	; SHIFT+f･6
+			input_text@+inpnot_text@
+			inpnot_text@="
+			size@=1
+			kind@=1
+			SwBreak
+		Case $176	; SHIFT+f･7
+			input_text@+inpnot_text@
+			inpnot_text@="
+			kind@=2
+			SwBreak
+		Case $177	; SHIFT+f･8
+			input_text@+inpnot_text@
+			inpnot_text@="
+			size@^1
+			If kind@==1{
+				kind@=0
+			}
+			SwBreak
+		Case $178	; SHIFT+f･9
+			input_text@+inpnot_text@
+			inpnot_text@="
+			kind@=0
+			SwBreak
+		Case $179	; SHIFT+f･10
+			ErrorMes "此機能は現在實裝してをりません。","このき　のぅ　　げんざいじっさぅ
+			/*
+				input_text@+inpnot_text@
+				inpnot_text@="
+				gui@=1
+				maincl@=255
+				Color maincl@,maincl@,0
+				BoxF 33*16,23*24,38*16-1,24*24-1
+				Color 0,0,0
+				Pos 66*8,23*24
+				PrintR "　ＧＵＩ　","",STRFONT,16
+				ViewFunction 1
+				ViewDialog 1,0
+				ObjPrm 0,inpnot_text@
+				ObjSel 0
+			*/
+			SwBreak
+	SwEnd
+	Return
+
+#defcfunc IfF int p1,str p2,str p3
+	If p1{
+		Return p2
+	}
+	Return p3
+
+#deffunc SetMenu
+	sDim menu,160,4,1
+	Dim menu_point,2,1
+	lDim menu_label,1
+	menu_num=0
+	Return
+
+#deffunc NewMenu str p1,str p2,str p3,str p4,int p5,int p6
+	menu(0,menu_num)=p1,p2,p3,p4
+	menu_point(0,menu_num)=p5,p6
+	JumpMenu menu_num,*Dummy
+	menu_num+
+	Return menu_num-1
+
+#deffunc JumpMenu int p1,label p2
+	menu_label(p1)=p2
+	Return
+
+#deffunc ViewMenu int p1,int p2
+	If topping==0{
+		topping=1
+		choosing@=p1
+		menuing@=1
+		mstart=p1
+		mend=p2
+	}
+	Return
+
+#defcfunc WhatMenu int p1,int p2
+	Return menu(p2,p1)
+
+#defcfunc MenuSE int p1
+	If p1{
+		Return mend
+	}
+	Return mstart
+
+#defcfunc StrMid str p1,int p2,int p3
+	work=p1
+	Return StrMid@hsp(work,p2,p3)
+
+#defcfunc StrMid2 str p1,int p2,int p3
+	work2=0
+	If p2!=0{
+		Repeat 108
+			If StrLen2(StrMid(p1,0,cnt))>p2||cnt==107{
+				work2=cnt
+				Break
+			}
+		Loop
+	}
+	work3=0
+	Repeat 108
+		If StrLen2(StrMid(p1,work2,cnt))>p3||cnt==107{
+			work3=cnt
+			Break
+		}
+	Loop
+	Return StrMid(p1,work2,work3)
+
+#defcfunc StrMid3 str p1,int p2,int p3
+	work2=0
+	If p2!=0{
+		Repeat 108
+			If StrLen3(StrMid(p1,0,cnt))>p2||cnt==107{
+				work2=cnt
+				Break
+			}
+		Loop
+	}
+	work3=0
+	Repeat 108
+		If StrLen3(StrMid(p1,work2,cnt))>p3||cnt==107{
+			work3=cnt
+			Break
+		}
+	Loop
+	Return StrMid(p1,work2,work3)
+
+#defcfunc StrRep2 str p1,str p2,str p3
+	string12345=p1
+	StrRep string12345,p2,p3
+	Return string12345
+
+#deffunc HideMenu
+	menuing@=0
+	topping=0
+	Return
+
+#deffunc Mark str p1,str p2
+	Color maincl@,maincl@,0
+	BoxF 640-StrLen2(p1)*8,0,639,23
+	Color 0,0,0
+	Pos 640-StrLen2(p1)*8,0
+	PrintR p1,p2,STRFONT,16
+	Return
+
+#deffunc WinDialog int p1,int p2,int p3,int p4
+	Screen p1,p2,p3,SCREEN_HIDE or SCREEN_FIXEDSIZE
+	SetWindowLong hwnd,-16,GetWindowLong(hwnd,-16)and$70000^GetWindowLong(hwnd,-16)
+	If p4{
+		SetWindowLong hwnd,-8,p4
+	}
+	SetWindowPos hwnd,0,0,0,0,0,39
+	DeleteMenu GetSystemMenu(hwnd),$f000
+	DeleteMenu GetSystemMenu(hwnd),$f020
+	DeleteMenu GetSystemMenu(hwnd),$f030
+	DeleteMenu GetSystemMenu(hwnd),$f120
+	Return
+
+#deffunc ViewDialog int p1,int p2
+	gSel p2
+	axo_x=gInfo_WX1:axo_y=gInfo_WY1
+	axo_x2=gInfo_SizeX:axo_y2=gInfo_SizeY
+	EnableWindow hWnd,0
+	gsel p1
+	Width,,axo_x+(axo_x2-gInfo_SizeX)/2,axo_y+(axo_y2-gInfo_SizeY)/2
+	gSel p1,gsel2@+1
+	return
+
+#deffunc HideDialog int p1,int p2
+	gSel p1,-1
+	gSel p2
+	EnableWindow hWnd,1
+	Return
+
+#deffunc ViewFunction int p1
+	If p1{
+		shift=0
+	}Else{
+		GetKey shift,16
+		shift*10
+	}
+	Repeat 10
+		Color maincl@,maincl@,maincl@
+		BoxF (7*cnt+4+(cnt>=5)*3)*8,24*24,(7*cnt+4+(cnt>=5)*3)*8+16*3-1,25*24-1
+		Color 0,0,0
+		Pos (7*cnt+4+(cnt>=5)*3)*8,24*24
+		PrintR function@(cnt+shift),function_ruby@(cnt+shift),STRFONT,16
+	Loop
+	Return
+
+#deffunc ErrorMes str p1,str p2
+	error@=1
+	Beep 880,500
+	error_text=p1
+	error_ruby=p2
+	Return
+
+#deffunc PutError
+	Color maincl@,0,0
+	Pos 0,600-24*2
+	PrintR error_text,error_ruby,STRFONT,16
+	Return
+
+#deffunc PicLoad2 str p1
+	gsel_work=ginfo_sel
+	Buffer 3
+	Exist p1
+	If strsize!=-1{
+		PicLoad p1
+;		Repeat ginfo_winy
+;			cnt_=cnt
+;			Repeat ginfo_winx
+;				pGet cnt,cnt_
+;				Color (ginfo_r>=128)*255,(ginfo_g>=128)*255,(ginfo_b>=128)*255
+;				pSet cnt,cnt_
+;			Loop
+;		Loop
+		pic_x=ginfo_sx:pic_y=ginfo_sy
+	}Else{
+		ErrorMes "畫像ワ゜イルが見付かりません。","く゛ゎさ゛う　　　　　　　　み　つ
+	}
+	gSel gsel_work
+	Return
+
+#deffunc gCopy2 int x1,int y1
+	gMode 3,pic_x,pic_y,maincl@
+	Pos x1,y1
+	gCopy 3,0,0,pic_x,pic_y
+	Return
+
+*Dummy
+	Return
+
+#global
+
+#module
+
+#defcfunc XiraKata str p1
+	string_work=p1
+	Repeat StrLen(string_work)
+		binary=Peek(string_work,cnt)<<16 or Peek(string_work,cnt+1)<<8 or Peek(string_work,cnt+2)
+		If $C2<=binary>>16&&binary>>16<=$DF{
+			Continue cnt+2
+		}Else: If $E0<=binary>>16&&binary>>16<=$EF{
+			If $E38181<=binary&&binary<=$E3819F||($E38280<=binary&&binary<=$E38293){
+				binary+$120
+			}Else: If $E381A0<=binary&&binary<=$E381BF{
+				binary+$1E0
+			}
+			Poke string_work,cnt,binary>>16
+			Poke string_work,cnt+1,binary>>8 and$ff
+			Poke string_work,cnt+2,binary and$ff
+			Continue cnt+3
+		}
+	Loop
+	Return string_work
+
+#defcfunc KataXira str p1
+	string_work=p1
+	Repeat StrLen(string_work)
+		binary=Peek(string_work,cnt)<<16 or Peek(string_work,cnt+1)<<8 or Peek(string_work,cnt+2)
+		If $C2<=binary>>16&&binary>>16<=$DF{
+			Continue cnt+2
+		}Else: If $E0<=binary>>16&&binary>>16<=$EF{
+			If $E382A1<=binary&&binary<=$E382BF||($E383A0<=binary&&binary<=$E383B3){
+				binary-$120
+			}Else: If $E38380<=binary&&binary<=$E3839F{
+				binary-$1E0
+			}
+			Poke string_work,cnt,binary>>16
+			Poke string_work,cnt+1,binary>>8 and$ff
+			Poke string_work,cnt+2,binary and$ff
+			Continue cnt+3
+		}
+	Loop
+	Return string_work
+
+#defcfunc HalfFull str p1
+	string_work=p1
+	val=0
+	For i,0,StrLen(string_work)
+		binary=Peek(string_work,i)
+		If '!'<=binary&&binary<='_'{
+			binary+$EFBC60
+			val+
+			string_work2=string_work+"　
+			Repeat StrLen(string_work)-(i+1),i+1
+				Poke string_work2,cnt+2,Peek(string_work,cnt)
+			Loop
+			string_work=string_work2
+			Poke string_work,i,binary>>16
+			Poke string_work,i+1,binary>>8 and$ff
+			Poke string_work,i+2,binary and$ff
+			i+2
+		}Else: If '`'<=binary&&binary<='~'{
+			binary+$EFBD20
+			val+
+			string_work2=string_work+"　
+			Repeat StrLen(string_work)-(i+1),i+1
+				Poke string_work2,cnt+2,Peek(string_work,cnt)
+			Loop
+			string_work=string_work2
+			Poke string_work,i,binary>>16
+			Poke string_work,i+1,binary>>8 and$ff
+			Poke string_work,i+2,binary and$ff
+			i+2
+		}
+	Next
+	Return StrMid(string_work,0,3)
+
+#global
+
+#module Char
+
+#defcfunc Split2 str p1,str p2,int p3
+	work=p1
+	Split work,p2,work
+	Return work(p3)
+
+#global
+
+#module Nitponese
+
+#defcfunc RepSimple str p1,int p2,int p3
+	string=p1
+	If p3{
+		sDim trad
+		sDim simp
+		trad="ちゃぅ","いきほ","あたひ","りゃぅ","しゃぅ","ひゃぅ","し゛ゃぅ","き゛ゃぅ
+		simp="ちょう","いきお","あたい","りょう","しょう","ひょう","し゛ょう","き゛ょう
+		trad(Length(trad))="しう　","きう　","せう　","しふ　","へう　","れう　"
+		simp(Length(simp))="しゅう","きゅう","しょう","しゅう","ひょう","りょう
+		trad(Length(trad))="行は","行ひ","使は","遣ひ","終は","替へ","添へ","勢ひ","まへ","をり
+		simp(Length(simp))="行わ","行い","使わ","遣い","終わ","替え","添え","勢い","まえ","おり
+		trad(Length(trad))="さぅ","ちひ","おほ","いう","あぅ","あひ","かぅ","かへ","し゛ふ゜","か゛う
+		simp(Length(simp))="そう","ちい","おお","ゆう","おう","あい","こう","かえ","し゛っ"　,"こ゛う
+		trad(Length(trad))="たぅ","かう
+		simp(Length(simp))="とう","こう
+		trad(Length(trad))="くゎ","く゛ゎ
+		simp(Length(simp))="か　","か゛　"
+		trad(Length(trad))="ゐ","ゑ
+		simp(Length(simp))="い","え
+		ForEach trad
+			StrRep string,trad(cnt),simp(cnt)
+		Loop
+	}
+	If p2{
+		sDim trad
+		sDim simp
+		trad="點","檢","橫","縱","數","參","寫","實","裝","號","變","餘","讀","擇","假","體","區","濟","畫","圍
+		simp="点","検","横","縦","数","参","写","実","装","号","変","余","読","択","仮","体","区","済","画","囲
+		trad(Length(trad))="單","殘","燈","當
+		simp(Length(simp))="単","残","灯","当
+		ForEach trad
+			StrRep string,trad(cnt),simp(cnt)
+		Loop
+	}
+	Return string
+
+#defcfunc RepLarge str p1,int p2
+	string=p1
+	If p2{
+		sDim little
+		sDim large
+		little="ぁ","ぃ","ぅ","ぇ","ぉ","っ","ゃ","ゅ","ょ","ゎ
+		large ="あ","い","う","え","お","つ","や","ゆ","よ","わ
+		If p2==2{
+			little(Length(little))="ァ","ィ","ゥ","ェ","ォ","ヵ","ヶ","ッ","ャ","ュ","ョ","ヮ
+			large (Length(large ))="ア","イ","ウ","エ","オ","カ","ケ","ツ","ヤ","ユ","ヨ","ワ
+		}
+		ForEach little
+			StrRep string,little(cnt),large(cnt)
+		Loop
+	}
+	Return string
+
+#global
+
+#module Calendar
+
+#deffunc TenpouInit
+	gre_day=0,31,28,31,30,31,30,31,31,30,31,30,31
+	ten_day=0,29,30,29,30,29,30,29,30,29,30,29,30
+	NoteSel calendar@calendar
+		NoteLoad "calendar.txt
+		NoteGet start,0
+	NoteUnsel
+	Split start,",",start
+	start=Int(start)
+	Return
+
+#defcfunc TenpouCalendar int year,int month,int day,int flag
+	gre_day(2)+year\4==0&&year\100!=0||year\400==0
+	NoteSel calendar@calendar
+		NoteGet dat_year,year-start
+	NoteUnsel
+	Split dat_year,",",dat_year,dat_month,dat_day,leap
+	dat_year=Int(dat_year)-1
+	dat_month=Int(dat_month)
+	dat_day=Int(dat_day)
+	leap=Int(leap)
+	work=0
+	Repeat month
+		work+gre_day(cnt)
+	Loop
+	work+day-1
+	leap2=0
+	Repeat work
+		If dat_day>=ten_day(dat_month){
+			dat_day-ten_day(dat_month)
+			If leap==dat_month&&leap2==0{
+				leap2=1
+			}Else{
+				leap2=0
+				dat_month+
+			}
+			If dat_month>12{
+				dat_month=1
+				dat_year+
+			}
+		}
+		dat_day+
+	Loop
+	gre_day(2)-year\4==0&&year\100!=0||year\400==0
+	Switch flag
+		Case 0
+			Return dat_year
+		Case 1
+			Return dat_month
+		Case 2
+			Return leap2
+		Case 3
+			Return dat_day
+	SwEnd
+	Return 0
+
+#global
+
+*SetUp
+	Randomize
+	TenpouInit
+	work=dir_cmdline
+	If InStr(work,0,"/s")!=-1: GoTo *Setting
+	screen 0,640,600,SCREEN_HIDE
+	title "ХIME Help Viewer Ver.0.8.0
+	cls 4
+	NoteSel roma_key
+		NoteLoad "roma.txt
+	NoteUnsel
+	NoteSel kana_key
+		NoteLoad "kana.txt
+	NoteUnsel
+	maincl=255
+	GoSub *LoadIni
+	flick=Int(1.5+0.255*flick)
+	prov=Int(0.5+0.24*prov)
+	SetMenu
+	NewMenu "File","","[File] File の管理を行ひます。","　　　　　　　　　　　　　　かんり　　　おこな",-1
+	NewMenu "E編輯","　へんしふ　","[Edit]","",-1
+	NewMenu "S設定","　せってぃ","[Setting] 此ヘルフ゜・フ゛ラウサ゛の設定を行ひます。","　　　　　　　　　　この　　　　　　　　　　　　　　　　　　せってぃ　　おこな",-1
+	JumpMenu stat,*OpenSet
+	NewMenu "Q終了 ","　しゅぅれう　","[Quit] 此ヘルフ゜・フ゛ラウサ゛を終了します。","　　　　　　　この　　　　　　　　　　　　　　　　　　しゅぅれう　",-1
+	JumpMenu stat,*Vopari
+	function    ="メニュ"," 複寫 "," 矩形 "," 檢索 ","　　　","かな變","カナ變","半角變","エイ變","單漢字"
+	function(10)="最前面","　　　","　　　","　　　","ロマ字","平假名","片假名","半／全","ラテン","ＧＵＩ
+	function_ruby    ="　　　　　　","　ふくしゃ　","　く　けい　","　けんさく　","　　　　　　
+	function_ruby(5) ="　　　　へん","　　　　へん","はんかくへん","　　　　へん","たんかんじ　
+	function_ruby(10)="さいぜんめん","　　　　　　","　　　　　　","　　　　　　","　　　　じ　
+	function_ruby(15)="ひらが　な　","かたか　な　","はん　　ぜん","　　　　　　","　　　　　　
+	data="
+	menu="
+	text="
+	ruby="
+	graphic_file="
+	NoteSel data
+		NoteLoad "helpdata.txt
+		Repeat NoteMax
+			NoteGet work,cnt
+			Switch cnt\4
+				Case 0
+					menu+work+"\n
+					SwBreak
+				Case 1
+					text(cnt/4)=work
+					strrep text(cnt/4),";","\n
+					strrep text(cnt/4),"{semicoron}",";
+					NoteSel text(cnt/4)
+						graphic_pointer(cnt/4)=NoteFind(BRACKET_A,2)
+					NoteUnsel
+					If InStr(text(cnt/4),0,BRACKET_A)!=-1&&InStr(text(cnt/4),0,BRACKET_B)!=-1{
+						graphic_file(cnt/4)=Split2(Split2(text(cnt/4),BRACKET_A,1),BRACKET_B,0)
+						text(cnt/4)=Split2(text(cnt/4),BRACKET_A,0)+Split2(text(cnt/4),BRACKET_B,1)
+					}
+					SwBreak
+				Case 2
+					ruby(cnt/4)=work
+					strrep ruby(cnt/4),";","\n
+					strrep ruby(cnt/4),"{semicoron}",";
+					SwBreak
+				Case 3
+					link(cnt/4)=work
+					SwBreak
+			SwEnd
+		Loop
+	NoteUnsel
+	WinDialog 1,320,120,hWnd
+	ClS 1
+	ObjSize GUI_X,GUI_Y
+	inpnot_text="
+	Pos (gInfo_WinX-GUI_X)/2,(gInfo_WinY-GUI_Y)/2
+	Input inpnot_text
+	Buffer 2,640,600
+	ClS 4
+
+*Main
+	gSel 0,1
+	page=-1
+	OnKey GoSub *InKey
+	OnCmd GoSub *InKey,$104
+	OnExit GoSub *Vofari
+	Repeat
+		If gInfo_Sel==0{
+			maincl=rnd(flick)+(256-flick)
+			ReDraw 0
+			Color 0,0,0
+			BoxF
+			cnt_=cnt
+			color maincl,maincl,0
+			Pos 2*16,5*24
+			If page>=0{
+				printr text(page),ruby(page),STRFONT,16
+				work=Split2(link(page),";",sel_menu)
+				If work!=""&&topping@mod_123==0&&error==0{
+					Color maincl,maincl,0
+					BoxF (4+StrLen2(StrMid(GetNote(text(page),Int(Split2(work,",",0))),0,Int(Split2(work,",",1)))))*8,(5+Split2(work,",",0))*24,(4+StrLen2(StrMid(GetNote(text(page),Int(Split2(work,",",0))),0,Int(Split2(work,",",2)))))*8-1,(6+Split2(work,",",0))*24-1
+					Color 0,0,0
+					Pos (4+StrLen2(StrMid(GetNote(text(page),Int(Split2(work,",",0))),0,Int(Split2(work,",",1)))))*8,(5+Split2(work,",",0))*24
+					PrintR StrMid(GetNote(text(page),Int(Split2(work,",",0))),Int(Split2(work,",",1)),Int(Split2(work,",",2))-Split2(work,",",1)),StrMid(GetNote(ruby(page),Int(Split2(work,",",0))),Int(Split2(work,",",4)),Int(Split2(work,",",5))-Split2(work,",",4)),STRFONT,16
+				}
+				If graphic_pointer(page)!=-1{
+					If work_page!=page{
+						PicLoad2 graphic_file(page)
+					}
+					gCopy2 2*16,(5+graphic_pointer(page))*24
+				}
+			}Else{
+				NoteSel menu
+					If topping@mod_123==0&&error==0{
+						BoxF 4*8,(5+sel_menu)*24,(4+StrLen2(StrRep2(Split2(GetNote(menu,sel_menu),";",0),"{semicoron}",";")))*8-1,(6+sel_menu)*24-1
+					}
+					flag=0
+					Repeat notemax
+						NoteSel menu
+							If cnt==sel_menu&&topping@mod_123==0&&error==0{
+								Color 0,0,0
+								flag=1
+							}Else{
+								Color maincl,maincl,0
+							}
+							PrintR StrRep2(Split2(GetNote(menu,cnt),";",0),"{semicoron}",";"),Split2(GetNote(menu,cnt),";",1),STRFONT,16
+						NoteUnsel
+					Loop
+					If flag==0{
+						If sel_menu<0{
+							NoteSel menu
+								sel_menu=notemax-1
+							NoteUnsel
+						}Else{
+							sel_menu=0
+						}
+					}
+				NoteUnsel
+			}
+			ViewFunction
+			If error{
+				Mark "エラー","
+				PutError
+			}Else{
+				If menuing{
+					Color maincl,maincl,0
+					Pos 0,0
+					PrintR WhatMenu(choosing,2),WhatMenu(choosing,3),STRFONT,16
+					Repeat MenuSE(1)-MenuSE(0)+1,MenuSE(0)
+						If cnt-Menu(0)==choosing{
+							Color maincl,maincl,maincl
+							BoxF ginfo_cx,ginfo_cy,ginfo_cx+7,ginfo_cy+23
+							Color maincl,maincl,0
+							BoxF ginfo_cx+8,ginfo_cy,ginfo_cx+StrLen2(WhatMenu(cnt,0))*8,ginfo_cy+23
+						}
+						Color (choosing!=cnt)*maincl,(choosing!=cnt)*maincl,(choosing!=cnt)*maincl
+						PrintR StrMid(WhatMenu(cnt,0),0,1),"",STRFONT,16
+						Color (choosing!=cnt)*maincl,(choosing!=cnt)*maincl,0
+						Pos ginfo_cx+8,ginfo_cy-24
+						PrintR StrMid(WhatMenu(cnt,0),1,StrLen(WhatMenu(cnt,0))-1),StrMid(WhatMenu(cnt,1),3,StrLen(WhatMenu(cnt,1))-3),STRFONT,16
+						Pos ginfo_cx+StrLen2(WhatMenu(cnt,0))*8,ginfo_cy-24
+					Loop
+				}Else{
+					If selecting{
+						If selecting==1{
+							selx(1)=selx:sely(1)=sely
+						}
+						Mark "範圍選擇","はんゐ　せんたく
+						If cnt_\4<2{
+							Color maincl,maincl,0
+							Repeat 2
+								BoxF (selx(cnt)+4)*8,(sely(cnt)+5)*24,(selx(cnt)+5)*8-1,(sely(cnt)+6)*24-1
+							Loop
+							If square!=0||selecting==1||sely(1)==sely(0){
+								BoxF (selx+4+(selx(0)>selx(1)))*8,(sely+5+(sely(0)>sely(1)))*24,(selx(1)+4+(selx(0)<=selx(1)))*8-1,(sely(1)+5+(sely(0)<=sely(1)))*24-1
+							}Else: If square==0&&selecting==2{
+								If sely(1)>sely(0){
+									BoxF (selx(0)+4)*8,(sely(0)+5)*24,76*8-1,(sely(0)+6)*24-1
+									Repeat Limit(sely(1)-sely(0)-1,0),sely+1
+										BoxF 4*8,(cnt+5)*24,76*8-1,(cnt+6)*24-1
+									Loop
+									BoxF 4*8,(sely(1)+5)*24,(selx(1)+4)*8-1,(sely(1)+6)*24-1
+								}Else/*: If sely(1)<sely(0)*/{
+									BoxF (selx(1)+4)*8,(sely(1)+5)*24,76*8-1,(sely(1)+6)*24-1
+									Repeat Limit(sely(0)-sely(1)-1,0),sely(1)+1
+										BoxF 4*8,(cnt+5)*24,76*8-1,(cnt+6)*24-1
+									Loop
+									BoxF 4*8,(sely(0)+5)*24,(selx(0)+4)*8-1,(sely(0)+6)*24-1
+								}
+							}
+						}
+						Color maincl,maincl,0
+						Pos 0,0
+						PrintR StrF("複寫する範圍を選擇してください：(%d,%d)",selx+1,sely+1)+IfF(selecting==2,StrF("..(%d,%d)",selx(1)+1,sely(1)+1),""),"ふくしゃ　　　　はんゐ　　　せんたく",STRFONT,16
+					}Else: If searching{
+						Mark "文字列","も　し゛　れつ"
+						Color maincl,maincl,0
+						Pos 0,0
+						PrintR StrF("檢索するキーワードを入力してください：%s%s",input_text,inpnot_text),"けんさく　　　　　　　　　　　　　　　　にふりょく",STRFONT,16
+						If cnt\8<4{
+							Color maincl,maincl,0
+							BoxF 8*(38+StrLen2(input_text)+StrLen2(inpnot_text)),22,8*(38+StrLen2(input_text)+StrLen2(inpnot_text))+7,23
+						}
+					}Else{
+						Mark "ヘルプ",""
+					}
+				}
+			}
+			Color 0,maincl,maincl
+			BoxF 0,3*24,639,4*24-1
+			Color 0,0,0
+			If page>=0{
+				Pos (80-StrLen2(StrRep2(Split2(GetNote(menu,page),";",0),"{semicoron}",";")))/2*8,3*24
+				PrintR StrRep2(Split2(GetNote(menu,page),";",0),"{semicoron}",";"),Split2(GetNote(menu,page),";",1),STRFONT,16
+			}Else{
+				Pos 35*8,3*24
+				PrintR "ヘルフ゜目次","　　　　　　もくし゛",STRFONT,16
+			}
+			Color maincl,maincl,0
+			Pos 0,23*24
+			If error==0{
+				Repeat 4
+					calendar(cnt)=TenpouCalendar(GetTime(0),GetTime(1),GetTime(3),cnt)
+				Loop
+				work=StrF("%04d/%s%02d/%02d　%02d",calendar(0)+544*(year_argo==0),IfF(calendar(2)!=0&&date_argo==0,"L",""),calendar(1)*(date_argo==0)or GetTime(1)*(date_argo!=0),calendar(3)*(date_argo==0)or GetTime(3)*(date_argo!=0),GetTime(4)\12)
+				If GetTime(6)\2{
+					work+":"
+				}else{
+					work+" "
+				}
+				work+StrF("%02d ",GetTime(5))
+				If GetTime(4)/12{
+					work+"PM
+				}Else{
+					work+"AM
+				}
+				PrintR work,"",STRFONT,16
+				Color maincl,maincl,0
+				BoxF 33*16,23*24,38*16-1,24*24-1
+				Color 0,0,0
+				Pos 66*8,23*24
+				PrintR StrF(" %s%s%s",IfF(size,"全角","半角"),IfF(kind,IfF(kind==1,"かな","カナ"),"ｴｲ"+IfF(GetKeyState($14),"大","小")),IfF(roma==0||kind==0," ","R")),StrF("　%s%s　",IfF(size,"ぜんかく","はんかく"),IfF(kind,"","　　"+IfF(GetKeyState($14),"だい","せう　"))),STRFONT,16
+				If gsel2{
+					Color maincl,maincl,0
+					BoxF 58*8,23*24,64*8-1,24*24-1
+					Color 0,0,0
+					Pos 58*8,23*24
+					PrintR "最前面","さいぜんめん",STRFONT,16
+				}
+				If square{
+					Color maincl,maincl,0
+					BoxF 48*8,23*24,56*8-1,24*24-1
+					Color 0,0,0
+					Pos 48*8,23*24
+					PrintR "矩形選擇","く　けいせんたく",STRFONT,16
+				}
+			}
+			Pos 0,0
+			gMode 3,640,600,prov
+			gCopy 2,0,0,640,600
+			ReDraw 1
+			gSel 2
+			Color 0,0,0
+			BoxF
+			gMode 0,640,600
+			gCopy 0,0,0,640,600
+			gSel 0
+			If rnd(1000)<droff{
+				Color 0,0,0
+				BoxF
+			}
+			If ginfo_act!=work_active{
+				GoSub *LoadIni
+				flick=Int(1.5+0.255*flick)
+				prov=Int(0.5+0.24*prov)
+				work_active=ginfo_act
+			}
+		}
+		work_page=page
+		Wait 5
+	Loop
+
+*InKey
+	keybd=wparam and$ff
+	if keybd==0||lparam>>30!=0||(keybd<19&&keybd>15){
+		return
+	}
+	getkey indexus,16
+	keybd or indexus<<8
+	getkey indexus,17
+	keybd or indexus<<9
+	ShortCut keybd
+	Return
+
+*Vofari
+	Switch wParam
+		Case 0
+			End
+			SwBreak
+		Case 1
+			HideDialog 1,0
+			SwBreak
+	SwEnd
+	Return
+
+#module DialogBox
+
+#uselib "user32
+#func SetWindowLong "SetWindowLongA" int,int,int
+#func SetParent "SetParent" int,int
+#func GetClientRect "GetClientRect" int,var
+
+#deffunc NewTab str p1
+	string="
+	Repeat 5
+		wPoke string,2*cnt,CnvStoA(StrMid(p1,3*cnt,3))
+	Loop
+	item=1,0,0,VarPtr(string)
+	SendMsg hTab@,$1307,tab_num,VarPtr(item)
+	Dim rect,4
+	GetClientRect hTab@,rect
+	SendMsg hTab@,$1328,,VarPtr(rect)
+	bgScr tab_num+1,rect(2)-rect(0),rect(3)-rect(1),SCREEN_HIDE,rect(0),rect(1)
+	SetWindowLong hwnd,-16,$40000000
+	SetParent hwnd,hTab@
+	tab_num+
+	Return
+
+#deffunc GroupBox str p1
+	x=ginfo_cx:y=ginfo_cy
+	WinObj "static","",,$50000000
+	Pos x,y
+	Button GoSub p1,*Dummy
+	id=stat
+	SendMsg objinfo_hwnd(id),$F4,7
+	ObjSkip id,3
+	Return
+
+*Dummy
+	Return
+
+#deffunc Radio str p1,var p2,int p3,int p4
+	p2=p3
+	ChkBox p1,p2
+	id=stat
+	If p4{
+		SetWindowLong ObjInfo_hWnd(id),-16,$50020009
+	}Else{
+		SendMsg ObjInfo_hWnd(id),$F4,9
+	}
+	Return id
+
+#global
+
+*Setting
+	GoSub *LoadIni
+	size_x=80:size_y=24
+	WinDialog 0,320,240
+	Title "ヘルプの設定
+	SysColor 4
+	BoxF
+	Pos 4,4
+	WinObj "systabcontrol32","",,$52000000,ginfo_winx-8,ginfo_winy-(size_y+12)
+	hTab=ObjInfo_hWnd(stat)
+	SendMsg hTab,$30,GetStockObject(17)
+	NewTab RepSimple("畫面",kanzi,kana)
+	Font STRFONT,15
+	SysColor 4
+	BoxF
+	SysColor 7
+	Pos 0,16
+	TrackBox 300,40
+	TrackRng 0,1000
+	Pos 0,72
+	TrackBox 300,40
+	TrackRng 0,1000
+	Pos 0,128
+	TrackBox 300,40
+	TrackRng 0,1000
+	Repeat 27
+		If cnt\9==0{
+			Sel_TrackBox cnt/9
+		}
+		TrackMrk (cnt\9+1)*100
+	Loop
+	GoSub *SetPos
+	NewTab "文章
+	SysColor 4
+	BoxF
+	ObjSize 300,80
+	GroupBox RepSimple("字體",kanzi,kana)
+	Pos 0,88
+	GroupBox RepSimple("假名遣",kanzi,kana)
+	ObjSize 120,24
+	Pos 30,22
+	Radio "正字體",segzi,kanzi==0,1
+	Radio "略字体",lyaku,kanzi!=0
+	Pos 30,110
+	Radio RepSimple("正假名遣",kanzi,0),segkana,kana==0,1
+	Radio RepSimple("表音假名",kanzi,1),xeuhom,kana!=0
+	NewTab "日付
+	SysColor 4
+	BoxF
+	ObjSize 300,80
+	GroupBox RepSimple("年號",kanzi,kana)
+	Pos 0,88
+	GroupBox "暦
+	ObjSize 120,24
+	Pos 30,22
+	Radio "ブッダ暦",buddha,year_argo==0,1
+	Radio "キリスト紀元",christ,year_argo!=0
+	Pos 30,110
+	Radio "天保歴",tenpou,date_argo==0,1
+	Radio "グレゴリオ暦",grego,date_argo!=0
+	gSel 1,1
+	gSel 0,2
+	OnCmd GoSub *ChangeTab,$4E
+	ObjSize size_x,size_y
+	Pos ginfo_winx-(size_x+4)*3,ginfo_winy-(size_y+4)
+	Button GoTo "OK",*SetOk
+	Pos ginfo_cx+(size_x+4),ginfo_cy-size_y
+	Button GoTo "キャンセル",*SetCancel
+	Pos ginfo_cx+(size_x+4),ginfo_cy-size_y
+	Button GoSub "初期設定",*SetFirst
+	gSel 1
+	Repeat 
+		If ginfo_sel==1{
+			Sel_TrackBox 0
+			TrackPos,1
+			flick=stat
+			Sel_TrackBox 1
+			TrackPos,1
+			prov=stat
+			Sel_TrackBox 2
+			TrackPos,1
+			droff=stat
+	;		ReDraw 0
+			SysColor 4
+			Repeat 3
+				BoxF 0,56*cnt,299,56*cnt+15
+			Loop
+			SysColor 7
+			Pos 0,0
+			Print RepSimple("畫面のちらつき ",kanzi,kana),1
+			If flick{
+				Print StrF("%5.1f%%",0.1*flick)
+			}Else{
+				Print "  オフ
+			}
+			Pos 0,56
+			Print RepSimple("殘像 ",kanzi,kana),1
+			If prov{
+				Print StrF("%5.1f%%",0.1*prov)
+			}Else{
+				Print "  オフ
+			}
+			Pos 0,112
+			Print RepSimple("消燈率 ",kanzi,kana),1
+			If droff{
+				Print StrF("%5.1f%%",0.1*droff)
+			}Else{
+				Print "  オフ
+			}
+	;		ReDraw 1
+		}Else: If ginfo_sel==2{
+			SendMsg ObjInfo_hWnd(4),$F0
+			If stat{
+				kanzi=0
+			}Else{
+				SendMsg ObjInfo_hWnd(5),$F0
+				If stat{
+					kanzi=1
+				}
+			}
+			SendMsg ObjInfo_hWnd(6),$F0
+			If stat{
+				kana=0
+			}Else{
+				SendMsg ObjInfo_hWnd(7),$F0
+				If stat{
+					kana=1
+				}
+			}
+		}Else: If ginfo_sel==3{
+			SendMsg ObjInfo_hWnd(4),$F0
+			If stat{
+				year_argo=0
+			}Else{
+				SendMsg ObjInfo_hWnd(5),$F0
+				If stat{
+					year_argo=1
+				}
+			}
+			SendMsg ObjInfo_hWnd(6),$F0
+			If stat{
+				date_argo=0
+			}Else{
+				SendMsg ObjInfo_hWnd(7),$F0
+				If stat{
+					date_argo=1
+				}
+			}
+		}
+		Wait 50
+	Loop
+	Stop
+
+*SetOk
+	WritePrivateProfileString "help","flick",Str(flick),INI_FILE
+	WritePrivateProfileString "help","prov",Str(prov),INI_FILE
+	WritePrivateProfileString "help","droff",Str(droff),INI_FILE
+	WritePrivateProfileString "string","zitai",Str(kanzi),INI_FILE
+	WritePrivateProfileString "string","kana",Str(kana),INI_FILE
+	WritePrivateProfileString "date","year",Str(year_argo),INI_FILE
+	WritePrivateProfileString "date","calendar",Str(date_argo),INI_FILE
+	End
+
+*SetCancel
+	End
+
+*SetFirst
+	flick=125
+	prov=275
+	droff=4
+	kanzi=1
+	kana=1
+	GoSub *SetPos
+	gs_work=ginfo_sel
+	gSel 2
+	ObjPrm 5,1
+	ObjPrm 7,1
+	gSel gs_work
+	Return
+
+*LoadIni
+	Exist dir_exe+"\\xime.ini
+	If strsize==-1{
+		work="
+		NoteSel work
+			NoteSave dir_exe+"\\xime.ini
+		NoteUnsel
+	}
+	flick=Int(GetPrivateProfileInt("help","flick",125,INI_FILE))
+	prov=Int(GetPrivateProfileInt("help","prov",275,INI_FILE))
+	droff=Int(GetPrivateProfileInt("help","droff",4,INI_FILE))
+	kanzi=Int(GetPrivateProfileInt("string","zitai",1,INI_FILE))
+	kana=Int(GetPrivateProfileInt("string","kana",1,INI_FILE))
+	year_argo=Int(GetPrivateProfileInt("date","year",0,INI_FILE))
+	date_argo=Int(GetPrivateProfileInt("date","calendar",0,INI_FILE))
+	Return
+
+*SetPos
+	Repeat 3
+		Sel_TrackBox cnt
+		Switch cnt
+			Case 0
+				TrackPos flick
+				SwBreak
+			Case 1
+				TrackPos prov
+				SwBreak
+			Case 2
+				TrackPos droff
+				SwBreak
+		SwEnd
+	Loop
+	Return
+
+*ChangeTab
+	DupPtr nmhdr,lparam,12
+	If nmhdr(0)==hTab&&nmhdr(2)==-551{
+		gSel wID+1,-1
+		SendMsg hTab,$130B
+		wID=stat
+		gSel wID+1,1
+	}
+	Return
+
+*Vopari
+	End
+	Return
+
+*OpenSet
+	Exist dir_exe+"\\help.exe
+	If strsize!=-1{
+		Exec dir_exe+"\\help.exe /s
+	}Else{
+		ErrorMes "設定フ゜ロク゛ラムか゛見附かりません。","せってぃ　　　　　　　　　　　　み　つ
+	}
+	Return

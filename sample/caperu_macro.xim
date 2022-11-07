@@ -1,0 +1,18 @@
+#title "蛙のうた (マクロ使用例)"
+
+{macro=
+	cdef
+	edc2
+	efga
+	gfe2
+	crcr
+	crcr
+	c8c8d8d8e8e8f8f8
+	edc2
+}
+
+t120
+
+!0 o4 l4 {macro}
+!1 o4 l4 [r1]2 {macro}
+!2 o4 l4 [r1]4 {macro}

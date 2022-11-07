@@ -1,0 +1,83 @@
+#title "–é‚ÌŽ¾‘– ( for GS/GM )"
+//
+//	–é‚ÌŽ¾‘– ( for GS/GM )
+//				composed/kamitama , onitama 1997/7
+//
+
+t168	
+
+!4 v108 q-64 l8 o4 @0 	 	// E.guiter (lead sub)
+!4         	P40 
+!4 [
+!4 l3o4g-e6g~g3r3 ga.gg-.>b.<d+ l12 d+6dd+d+6f-g-3.r12
+!4 l3g.e6g-6g6e~e3g.ag.>b.<d+.b~b3r3r3
+!4   b~b3r.l6gab.<c.>b3.aga.d3~d3r12g-ga.d3~d3r6.
+!4 l3g~g3r.l6ef+g.a.g3.f+el3>b.<d+.b~b3r3r3r3
+!4 ]2
+!6 v78 q-64 l8 o4 @0 	 	// E.guiter (lead sub)
+!6         	P54   
+!6 [
+!6 l3o4g-e6g~g3r3 ga.gg-.>b.<d+ l12 d+6dd+d+6f-g-3.r12
+!6 l3g.e6g-6g6e~e3g.ag.>b.<d+.b~b3~b3~b3
+!6   b~b3r.l6gab.<c.>b3.aga.d3~d3r12g-ga.d3~d3r6.
+!6 l3g~g3r.l6ef+g.a.g3.f+el3>b.<d+.b~b3r3r3r3
+!6 ]2
+!8 v49 q-64 l16 o4 @11 	 	// effect
+!8          	P64 
+!8 [
+!8 l12[[e>g<e>g<]8 [d+>g-<d+>g-<]8]2
+!8     [d>g<d>g<]8 k-1[g>g<g>g<]8  k0
+!8     [d>g<d>g<]8 k-1[g>g<g>g<]8  k0
+!8 ]2
+;I ch 1  V90 v80 q-64 l16 o4 @15  	// Piano (back)
+;I          	P34 
+!3 v74 q-64 l8 o2 @39 		// E.Bass
+!3          	P64 
+!3 [
+!3 l6 [[ee<e12e12>e]4[d+d+<d+12d+12>d+]4]2
+!3    [g>g<g>g<]4 k-1[g>g<g>g<]4 k0
+!3    [ee e12e12 e]4[d+d+ d+12d+12 d+]4
+!3 ]2
+!7 v77 q-64 l8 o2 @37 		// E.Bass2
+!7          	P64 
+!7 [
+!7 l6 [[ee<e12e12>e]4[d+d+<d+12d+12>d+]4]2
+!7    [g>g<g>g<]4 k-1[g>g<g>g<]4 k0
+!7    [ee e12e12 e]4[d+d+ d+12d+12 d+]4
+!7 ]2
+!9 v94 q-64 l16 o2 @25 		// Drums (BD,SD)
+!9 [
+!9 l12
+!9 [[ crc'60r/drcd'60 ]8 ddcc ]2
+!9 [ crrc drcr crrr /drcr ]8 dagc
+!9 ]2
+;E ch 10 V120 v70 q-64 l8  o2  r8		// Drums (HH)
+;E          	 R50 H20
+!5 v42 q-32 l1 o4 @48 P76 		// Strings (back sub)
+!5         	
+
+!1 v99 q-96 l8 o4 @0 P70		// Main
+!1 [
+!1 l3 e>b6<e~er3 ef+.e d+.>g-.<d+>l12b6abb6<c+d+3.r12
+!1 l3e.>b6<e>b~b3<e.f+e.>g-.b.<g-~g-3r3r3
+!1   b~b3r.l6gab.<c.>b3.aga.d3~d3r12g-ga.d3~d3r6.
+!1 l3g~g3r.l6ef+g.a.g3.f+el3>g-.b.<g-~g-3r3r3r3
+!1 ]2
+
+!2 v74 q-96 l8 o4 @0 P40		// Main2
+
+;------------------------------------------------------------------------
+;E [
+
+;------------------------------------------------------------------------
+
+;E l12 [ o2g+rg+r o5d+r o2f+f+ g+rg+r o5d+r o2 a+r ]16
+
+
+
+
+
+;------------------------------------------------------------------------
+;E ]*
+
+;------------------------------------------------------------------------

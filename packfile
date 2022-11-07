@@ -1,0 +1,12 @@
+;
+;	source generated packfile
+;
+xime.ico
+toolbar.png
+;!hide=1
+;!name=xime
+;!icon=xime.ico
+;!version=version_xime.txt
+;!upx=1
+;!lang=1041
++start.ax

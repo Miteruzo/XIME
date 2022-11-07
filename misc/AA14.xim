@@ -1,0 +1,24 @@
+#title "bamboo"
+//  "AA14"  by Ana.
+// Last modefied 1997.05 by T.Anazawa
+
+t60
+
+!0 @13 o3
+!1 o3 @39
+!2 o2 v80 @17
+
+{loop=
+	!0 l32
+	!0     e&g&b rr e&g&b rr e&g&b rr r e&g&b r e&g&b r e&g&b r
+	!0      d&f&a rr d&f&a rr d&f&a rr r d&f&a r c&e&g r d&f&a r
+
+	!1 q-64
+	!1  l32 b_egb < g_b_eg < e_g_b_e <b_egb >>>
+	!1   l32 a_dfa < f_a_df < d_f_a_d < a_dfa >>> 
+
+	!2 l16
+	!2  baba32ba32bad^
+	!2   agag32ag32agc^
+}
+{loop}{loop}{loop}{loop}{loop}{loop}{loop}{loop}

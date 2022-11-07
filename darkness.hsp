@@ -1,0 +1,13 @@
+#include "hsp3utf.as
+
+	NoteSel a
+		NoteLoad "lost.txt
+		work="\twww=\"\n\twww+StrF(\"%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\"
+		Repeat notesize
+			work+","+StrF("$%02X",Peek(a,cnt))
+			If cnt\16==15: work+")\n\twww+StrF(\"%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\"
+		Loop
+	NoteUnsel
+	NoteSel work
+		NoteSave "test.txt
+	NoteUnsel

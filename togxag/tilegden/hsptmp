@@ -1,0 +1,1935 @@
+;*******************************************************************************
+; フヮイル名 : main.hsp
+; 更新年月日 : 平29/05/16
+; 作成者     : Taker32X
+; 作成年月日 : 平28/10/10
+; 機能       : 簡易エディタ、MML を書いてコンパイル+實行せられる環境
+;*******************************************************************************
+
+;------------------------------------ TODO ------------------------------------
+;
+; 1. ヘルプの實裝。
+;
+; 2. 印刷機能を完全に完成せさせる。
+;
+; 3. 置換の完成。GUI も確りと。
+;
+; 4. タブ・エディタ化。
+;
+; 5. 正規表現、エスケイプ・シクヱンスを用ゐた檢索の對應。
+;
+;------------------------------------------------------------------------------
+
+#runtime "hsp3c
+
+#include "mod_menu.as
+#include "mod_stbar.as
+#include "mod_fontdlg.as
+#include "obj.as
+#include "mod_xime.as
+#include "llmod3/llmod3.hsp
+#include "llmod3/msgdlg.hsp
+#include "llmod3/input.hsp
+#include "hspprint.as
+;#include "mod_regexp.as
+
+#define let_str(%1) %1=str(%1)
+#define let_int(%1) %1=int(%1)
+#define INI_FILE (dir_exe+"\\xime.ini")
+#define ctype pt2mm(%1) (0.352778*%1)
+#define writeset(%1,%2,%3,%4=int) let_str %3:WritePrivateProfileString %1,%2,%3,INI_FILE:if "%4"=="int"{let_int %3}
+#define readset(%1,%2,%3,%4,%5=int) %3="":GetPrivateProfileString %1,%2,%3,%3,%4,INI_FILE:if "%5"=="int"{let_int %3}
+
+#uselib "user32
+#func SetWindowPos "SetWindowPos" sptr,sptr,sptr,sptr,sptr,sptr,sptr
+#cfunc GetWindowLong "GetWindowLongA" int,int
+#func SetWindowLong "SetWindowLongA" int,int,int
+#cfunc GetSystemMetrics "GetSystemMetrics" int
+#cfunc GetSystemMenu "GetSystemMenu" int,nullptr
+#func DeleteMenu "DeleteMenu" int,int,nullptr
+#func EnableWindow "EnableWindow" int,int
+#cfunc IsZoomed "IsZoomed" int
+#cfunc IsIconic "IsIconic" int
+#func CreateWindowEx "CreateWindowExA" int,str,str,int,int,int,int,int,int,int,int,int
+#func MoveWindow "MoveWindow" int,int,int,int,int,int
+#func SetFocus "SetFocus" int
+#cfunc GetDC "GetDC" int
+#func ReleaseDC "ReleaseDC" int,int
+#uselib "gdi32
+#func CreateSolidBrush "CreateSolidBrush" int
+#cfunc GetDeviceCaps "GetDeviceCaps" int,int
+#cfunc CreateFontIndirect "CreateFontIndirectA" int
+#func GetObject "GetObjectA" int,int,int
+#uselib "kernel32
+#func GetPrivateProfileString "GetPrivateProfileStringA" sptr,sptr,sptr,var,int,sptr
+#func WritePrivateProfileString "WritePrivateProfileStringA" sptr,sptr,sptr,sptr
+#uselib "shell32
+#func DragAcceptFiles "DragAcceptFiles" int,int
+#func DragQueryFile "DragQueryFileA" int,int,int,int
+#func DragQueryPoint "DragQueryPoint" int,int
+#func DragFinish "DragFinish" int
+
+#enum ID_FONT=1
+#enum ID_COLOUR
+#enum ID_QUIT
+#enum ID_PLAY
+#enum ID_ALL
+#enum ID_STOP
+#enum ID_NEW
+#enum ID_LOAD
+#enum ID_SAVE
+#enum ID_SAVEAS
+#enum ID_UNDO
+#enum ID_MOVE
+#enum ID_COPY
+#enum ID_PASTE
+#enum ID_DEL
+#enum ID_MIDI
+#enum ID_INMIDI
+#enum ID_RELOAD
+#enum ID_NOTEDIT
+#enum ID_PLAYONLY
+#enum ID_COMPILE
+#enum ID_PRINT
+#enum ID_PAGE
+#enum ID_HELP
+#enum ID_MESBOX
+#enum ID_TOP
+#enum ID_GOTO
+#enum ID_BOTTOM
+#enum ID_STATUS
+#enum ID_INDENT
+#enum ID_FORMAT
+#enum ID_NEDIT
+#enum ID_REDIT
+#enum ID_SEARCH
+#enum ID_SNEXT
+#enum ID_SBACK
+#enum ID_REPLACE
+#enum ID_SEGKANA
+#enum ID_OMKANA
+#enum ID_SEGZI
+#enum ID_RYAKUZI
+
+#packopt hide 1
+#packopt name xime
+
+#module
+
+#uselib "user32
+#cfunc FindWindow "FindWindowA" var,int
+#func GetWindowRect "GetWindowRect" int,var
+#uselib "shell32
+#func SHAppBarMessage "SHAppBarMessage" int,var
+
+#undef gsel
+#define global gsel(%1=0,%2=0) _gsel %1,%2
+#define global gunsel(%1=0) _gunsel %1
+
+#deffunc _gsel int p1,int p2
+	data=ginfo_sel
+	gsel@hsp p1,p2
+	return
+
+#deffunc _gunsel int p1
+	gsel@hsp data,p1
+	return
+
+#deffunc objint var p1,int p2
+	objprm p2,strf("%g",double(p1))
+	return
+
+#defcfunc pos_taskbar
+	gosub *get_iroiro
+	if rc(1)>0: tsk=0
+	if rc(3)<(ginfo_dispy-1): tsk=1
+	if rc(2)<(ginfo_dispx-1): tsk=2
+	if rc(0)>0: tsk=3
+	return tsk
+
+#defcfunc width_taskbar
+	gosub *get_iroiro
+	return rc(2)-rc(0)
+
+#defcfunc height_taskbar
+	gosub *get_iroiro
+	return rc(3)-rc(1)
+
+*get_iroiro
+	dim AppbData,6
+	dim rc,4
+	uxoxo="Shell_TrayWnd"
+	AppbData=24,FindWindow(uxoxo,0)
+	SHAppBarMessage 5,AppbData
+	GetWindowRect FindWindow(uxoxo,0),rc
+	return
+
+#defcfunc rep_easy str p3,int p1,int p2
+	sen=p3
+	if p2{
+		sdim seg
+		sdim esy
+		seg="しう",　"行は","使は","遣ひ","終は","ゐ","ゑ
+		esy="しゅう","行わ","使わ","遣い","終わ","い","え
+		foreach seg
+		strrep sen,seg(cnt),esy(cnt)
+		loop
+	}
+	if p1{
+		sdim seg
+		sdim esy
+		seg="檢","橫","縱","數","參","寫","實","裝","號","變","餘","讀","擇","假","體","區
+		esy="検","横","縦","数","参","写","実","装","号","変","余","読","択","仮","体","区
+		foreach seg
+		strrep sen,seg(cnt),esy(cnt)
+		loop
+	}
+	return sen
+
+#defcfunc rep_large str p1,int p2
+	sen=p1
+	if p2{
+		sdim little
+		sdim large
+		little="ぁ","ぃ","ぅ","ぇ","ぉ","ゃ","ゅ","ょ","ゎ
+		large ="あ","い","う","え","お","や","ゆ","よ","わ
+		if p2==2{
+			little(length(little))="ァ","ィ","ゥ","ェ","ォ","ヵ","ヶ","ャ","ュ","ョ","ヮ
+			large (length(large ))="ア","イ","ウ","エ","オ","カ","ケ","ヤ","ユ","ヨ","ワ
+		}
+		foreach little
+		strrep sen,little(cnt),large(cnt)
+		loop
+	}
+	return sen
+
+#defcfunc how_many str p1,str p2
+	string=p1
+	split string,p2
+	return stat-1
+
+#deffunc prints str p1,str p2,int p3
+	font p2,p3
+	text=p1
+	notesel text
+	for i,0,notemax
+	noteget text_data,i
+	repeat 0.5+1f*strlen(text_data)/2
+	pos ginfo_winx,ginfo_winy
+	print strmid(text_data,cnt*2,2)
+	pos double(1f*p3-1f*ginfo_mesx)/2+cnt*p3,double(p3-ginfo_mesy)/2+p3*i
+	print strmid(text_data,cnt*2,2)
+	loop
+	next
+	noteunsel
+	return
+
+#deffunc searching int p1
+	if used_box@==0{
+		search_text@=text@
+		search_keyword=keyword@
+		if distinguish@==0{
+			repeat 26
+			strrep search_text@,strf("%c",'A'+cnt),strf("%c",'a'+cnt)
+			strrep search_keyword,strf("%c",'A'+cnt),strf("%c",'a'+cnt)
+			loop
+		}
+		gsel 0,1
+		if p1==0{
+			sendmsg hMesbox@,$B0,0,varptr(locate@)
+			locate@=strlen(strmid_index(box_index@,search_text@,0,locate@))
+			search_pos@=instr(search_text@,locate@,search_keyword)
+			if search_pos@==-1{
+				gsel 7
+				dialog rep_easy("終はりまで檢索しました。",kanzi@,kana@)
+				gunsel
+			}else{
+				objsel 0
+				sendmsg hMesbox@,$B1,strlen_index(box_index@,strmid(search_text@,0,locate@+search_pos@)),strlen_index(box_index@,strmid(search_text@,0,locate@+search_pos@+strlen(search_keyword)))
+				if search_dialog@{
+					gsel 7,1
+					gunsel
+				}
+			}
+			gunsel
+		}else{
+			keyword_work=""
+			repeat strlen(search_keyword)
+			keyword_work+strmid(search_keyword,strlen(search_keyword)-cnt-1,1)
+			loop
+			search_text_work=""
+			repeat strlen(search_text@)
+			search_text_work+strmid(search_text@,strlen(search_text@)-cnt-1,1)
+			loop
+			sendmsg hMesbox@,$B0,varptr(locate@)
+			locate@=strlen(strmid_index(box_index@,search_text@,0,locate@))
+			search_pos@=instr(search_text_work,strlen(search_text@)-locate@,keyword_work)
+			if search_pos@==-1{
+				gsel 7
+				dialog rep_easy("終はりまで檢索しました。",kanzi@,kana@)
+				gunsel
+			}else{
+				objsel 0
+				sendmsg hMesbox@,$B1,strlen_index(box_index@,strmid(search_text@,0,locate@-search_pos@)),strlen_index(box_index@,strmid(search_text@,0,locate@-(search_pos@+strlen(search_keyword))))
+				if search_dialog@{
+					gsel 7,1
+					gunsel
+				}
+			}
+			gunsel
+		}
+		gsel 0,1
+		objsel 0
+		gunsel
+	}
+	return
+
+#defcfunc box_hwnd int p1
+	if p1==0{
+		return hMesbox@
+	}
+	if p1==1{
+		return hRich@
+	}
+	return -1
+
+#deffunc error_mes str p1
+	dialog p1+"\n"+ifs(statement_e@modxime==""&&no@modxime=="","","--> ")+statement_e@modxime+no@modxime+" (error "+stat+" : line "+mmlerr()+")",1
+	return
+
+#deffunc realtime
+	mml_data=mml@modxime
+	strrep mml_data,"  ","\n"
+	gsel 9
+	r=ginfo_r
+	g=ginfo_g
+	b=ginfo_b
+	color 0,0,0
+	boxf
+	color 255,255,255
+	prints mml_data,msgothic,16
+	color r,g,b
+	gunsel
+	return
+
+#defcfunc ifs int p1,str p2,str p3
+	if p1{
+		return p2
+	}else{
+		return p3
+	}
+
+#deffunc groupbox str p1
+	button gosub p1,*dummy
+	id=stat
+	sendmsg objinfo_hwnd(id),$F4,7
+	objskip id,3
+	return
+
+*dummy
+	return
+
+#defcfunc strlen_index int p1,str p2
+	if p1{
+		val=strlen(p2)-count_full(p2)
+	}else{
+		val=strlen(p2)
+	}
+	return val
+
+#defcfunc instr_index int p1,str p2,int p3,str p4
+	string=p2
+	if p1{
+		val=instr(string,strlen(strmid_index(1,p2,0,p3)),p4)
+		if val!=-1{
+			val=strlen_index(1,strmid(string,0,val))
+		}
+	}else{
+		val=instr(string,p3,p4)
+	}
+	return val
+
+#defcfunc strmid_index int p1,str p2,int p3,int p4
+	string=p2
+	if p1{
+		val2=0
+		char_full=0
+		char_return=0
+		repeat strlen(string)
+		dat_byte=peek(string,cnt)
+		if char_full{
+			char_full=0
+		}else: if char_return{
+			if dat_byte==$0A{
+				val2+2
+			}
+			char_return=0
+		}else{
+			if val2>=p3{
+				val2=cnt
+				break
+			}
+			if $20<=dat_byte&&dat_byte<=$7E||($A1<=dat_byte&&dat_byte<=$DF){
+				val2+
+			}else: if $81<=dat_byte&&dat_byte<=$9F||($E0<=dat_byte&&dat_byte<=$FC)&&cnt<strlen(string)-1{
+				val2+
+				char_full=1
+			}else: if dat_byte==$0D{
+				char_return=1
+			}
+		}
+		loop
+		val3=0
+		char_full=0
+		char_return=0
+		repeat strlen(string)-val2+1,val2
+		dat_byte=peek(string,cnt)
+		if char_full{
+			char_full=0
+		}else: if char_return{
+			if dat_byte==$0A{
+				val3+2
+			}
+			char_return=0
+		}else{
+			if val3>=p4{
+				val3=cnt
+				break
+			}
+			if $20<=dat_byte&&dat_byte<=$7E||($A1<=dat_byte&&dat_byte<=$DF){
+				val3+
+			}else: if $81<=dat_byte&&dat_byte<=$9F||($E0<=dat_byte&&dat_byte<=$FC)&&cnt<strlen(string)-1{
+				val3+
+				char_full=1
+			}else: if dat_byte==$0D{
+				char_return=1
+			}
+		}
+		loop
+		val=strmid(string,val2,val3)
+	}else{
+		val=strmid(string,p3,p4)
+	}
+	return val
+
+#defcfunc count_full str p1
+	val=0
+	string=p1
+	repeat strlen(string)
+	dat_byte=peek(string,cnt)
+	if char_full{
+		char_full=0
+	}else{
+		if $20<=dat_byte&&dat_byte<=$7E||($A1<=dat_byte&&dat_byte<=$DF){
+		}else: if $81<=dat_byte&&dat_byte<=$9F||($E0<=dat_byte&&dat_byte<=$FC)&&cnt<strlen(string)-1{
+			val+
+			char_full=1
+		}
+	}
+	loop
+	return val
+
+#deffunc Load2 str p1
+	Exist p1
+	If StrSize==-1{
+		Dialog p1+rep_easy(" の讀み込みに失敗しました。",kanzi@,kana@),1
+	}Else{
+		gosub *hangout@
+		if status@{
+			notesel text@
+			noteload p1
+			noteunsel
+			filename@=p1
+			text_hangout@=text@
+			objprm 0,text@
+			if notedit@: gosub *notedit_@
+			gosub *set_menu@
+		}
+	}
+	Return
+
+#global
+
+	screen 1,,,screen_hide
+	repeat 2
+	gsel cnt
+	mwhw(cnt)=hwnd
+	loop
+
+	screen 2,512,320,6
+	gosub *win_dialog
+	title "印刷
+	gosub *update_pinfo
+	print_width=40
+	print_height=36
+	print_pts=10.5
+	print_top=20f
+	print_bottom=20f
+	print_left=20f
+	print_right=20f
+	print_fname=msmincho
+	print_width_=print_width
+	print_height_=print_height
+	print_top_=print_top
+	print_bottom_=print_bottom
+	print_left_=print_left
+	print_right_=print_right
+	print_pts_=print_pts
+	print_fname_=print_fname
+
+	screen 4,ginfo_dispx,ginfo_dispy,6
+	gosub *win_dialog
+
+	gosub *screen_5
+
+	screen 6,280,90,6
+	gosub *win_dialog
+	syscolor 4
+	boxf
+	syscolor 7
+	title "指定行に移動
+	font "ＭＳ Ｐゴシック",16
+	pos 20,15
+	print "何行目に移動しますか：
+	pos 53,45
+	objsize 80,24
+	input what_line
+	SetWindowLong objinfo_hwnd(stat),-16,$50010082
+	pos ginfo_cx+100,ginfo_cy-24
+	objsize 64,24
+	button gosub "OK",*gline_ok
+	pos ginfo_cx-20,ginfo_cy-20
+	font msgothic,16
+	print "行
+
+	keyword=""
+	search_down=1
+	gosub *screen_7
+
+	keyword_rep=""
+	gosub *screen_8
+
+	screen 9,640,480,SCREEN_HIDE
+	cls 4
+	gosub *win_dialog
+
+	gsel 0
+	onexit gosub *vofari
+	sdim text,64000
+	sdim text_hangout,64000
+	exist dir_exe+"\\xime.ini
+	gosub *normal_set
+	if strsize==-1{
+		gosub *format_set
+	}
+	gosub *load_set
+	filename=""
+	dim fontis,8
+	bcolour=255,255,255
+
+	screen 0,ginfo_dispx,ginfo_dispy,2
+	gosub *make_bone
+	font fontname,fontsize,fontstyle
+	objmode 2,0
+	pos 0,0
+	gosub *set_mesbox
+	stbar_ini
+	stbar_text "Ready
+	if in_status==0{
+		clrobj 1,1
+	}
+	gosub *set_menu
+
+	screen 1,ginfo_dispx,ginfo_dispy,2
+	gosub *make_bone
+	stbar_ini
+	stbar_text "Ready
+	LoadLibrary "riched32
+	richx=ginfo_winx
+	richy=ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status
+	CreateWindowEx 0,"RichEdit","",$50B110C4,0,0,richx,richy,hwnd,0,hinstance,0
+	hRich=stat
+	sendmsg hRich,$435,0,$7ffffffd
+	MoveWindow hRich,0,0,ginfo_winx+1,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,1
+	SetWindowPos hRich,0,0,0,ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,$40
+	sendmsg hRich,$44d,4,$1000000
+	gosub *chg_font
+	if in_status==0{
+		clrobj 0,0
+	}
+	gosub *set_menu
+
+	screen 32,,,SCREEN_HIDE
+	work="あいうえお
+	mesbox work,100
+	work=objinfo_hwnd(stat)
+	sendmsg work,$b1,0,-1
+	sendmsg work,$b0,0,varptr(work)
+	if work==5{
+		box_index=1
+	}else{
+		box_index=0
+	}
+	wait 0
+
+	repeat 2
+	gsel used_box^cnt^1,cnt
+	oncmd gosub *command_,$111
+	oncmd gosub *label,$5
+	oncmd gosub *drop_files,$233
+	loop
+	onkey gosub *shortcut
+	gosub *label
+	SetFocus (used_box==0)*hMesbox or(used_box==1)*hRich
+	gsel_works=-1
+	active_work=-1
+	Repeat 2
+	gSel cnt
+	DragAcceptFiles hwnd,1
+	gUnsel
+	Loop
+	CmdLine=Dir_CmdLine
+	CmdLine=StrTrim(CmdLine,0,' ')
+	CmdLine=StrTrim(CmdLine,3,'"')
+	If CmdLine!=""{
+		Load2 CmdLine
+	}
+
+*main
+	repeat
+	if windlg==0&&(ginfo_sel==0||ginfo_sel==1){
+		if text_hangout!=text{
+			addchr=" *"
+		}else{
+			addchr=""
+		}
+		if filename==""{
+			title prgname+" - (無題)"+addchr
+		}else{
+			title prgname+" - "+getpath(filename,8)+addchr
+		}
+		gosub *set_msgline
+		if msgline!=msgline_hangout{
+			stbar_text strf("line : %d",msgline+1)
+		}
+		msgline_hangout=msgline
+		if (IsZoomed(mwhw(used_box))||IsIconic(mwhw(used_box)))==0{
+			winx=ginfo_sizex
+			winy=ginfo_sizey
+			winpx=ginfo_wx1
+			winpy=ginfo_wy1
+		}
+	}
+	#ifdef _DEBUG
+		if ginfo_sel!=gsel_works||ginfo_act!=active_work{
+			logmes strf("Select: %d, Active: %d",ginfo_sel,ginfo_act)
+			gsel_works=ginfo_sel
+			active_work=ginfo_act
+		}
+	#endif
+	wait 15	; コンピュータのバカ!!
+	loop
+	stop
+
+*label
+	if ginfo_sel==0||ginfo_sel==1{
+		if ginfo_sel==0{
+			SetWindowPos hMesbox,0,0,0,lparam and$FFFF,(lparam>>16)and$FFFF,0
+			winsize=ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,0,0
+			resizeobj 0,winsize,1
+		}else{
+			MoveWindow hRich,0,0,ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,1
+		}
+		stbar_resize
+	}
+	return
+
+*command_
+	switch wparam and$ffff
+		case ID_FONT
+			fontdlg fontis
+			if stat{
+				fontname=refstr
+				fontsize=fontis(0)
+				fontstyle=fontis(1)or fontis(6)<<2 or fontis(7)<<3
+				if ginfo_sel==0{
+					font fontname,fontsize,fontstyle
+					color fontis(3)or fontis(4)<<8 or fontis(5)<<16
+					clrobj 0,0
+					pos 0,0
+					gosub *set_mesbox
+				}else: if ginfo_sel==1{
+					gosub *chg_font
+				}
+			}
+			swbreak
+		case ID_COLOUR
+			dialog,32
+			bcolour=ginfo_r or ginfo_g<<8 or ginfo_b<<16
+;			gsel 0
+;			CreateSolidBrush bcolour
+;			hBrush=stat
+			gsel 1
+			sendmsg hRich,$443,0,bcolour
+			SetFocus hRich
+			gsel used_box
+			swbreak
+		case ID_QUIT
+			gosub *save_set
+			gosub *hangout
+			if status: end
+			swbreak
+		case ID_PLAY
+			mmlset 0,text
+			gosub *comperr
+			if stat==0||stat==-1{
+				mmlplay 0
+				realtime
+			}
+			swbreak
+		case ID_ALL
+			gosub *choose_all
+			swbreak
+		case ID_STOP
+			mmlstop
+			swbreak
+		case ID_NEW
+			gosub *hangout
+			if status{
+				text=""
+				text_hangout=text
+				objprm 0,text
+				filename=""
+				if notedit: gosub *notedit_
+				gosub *set_menu
+			}
+			swbreak
+		case ID_LOAD
+			gosub *load
+			swbreak
+		case ID_SAVE
+			if filename!=""{
+				overwrite=1
+			}else{
+				overwrite=0
+			}
+			gosub *save
+			swbreak
+		case ID_SAVEAS
+			overwrite=0
+			gosub *save
+			swbreak
+		case ID_UNDO
+			keybd_event 17,0
+			keybd_event 'Z',-1
+			keybd_event 17,1
+			swbreak
+		case ID_MOVE
+			sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$300
+			swbreak
+		case ID_COPY
+			sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$301
+			swbreak
+		case ID_PASTE
+			sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$302
+			swbreak
+		case ID_MIDI
+			gosub *out_midi
+			swbreak
+		case ID_INMIDI
+			gosub *in_midi
+			swbreak
+		case ID_RELOAD
+			if filename!=""{
+				msgdlg rep_easy("變更内容を破棄して再讀込を行ひます。よろしう御座いますか。",kanzi,kana),rep_easy("再讀込",kanzi,kana),$104,3
+				if stat==7: swbreak
+				noteload filename
+				text_hangout=text
+				objprm 0,text
+			}
+			swbreak
+		case ID_NOTEDIT
+			gosub *notedit_
+			swbreak
+		case ID_PLAYONLY
+			mmlplay 0
+			realtime
+			swbreak
+		case ID_COMPILE
+			mmlset 0,text
+			gosub *comperr
+			swbreak
+		case ID_PRINT
+			gosub *printout
+			swbreak
+		case ID_PAGE
+			gsel used_box
+			EnableWindow hwnd,0
+			gsel 5,1
+			swbreak
+		case ID_HELP
+			gosub *help
+			swbreak
+		case ID_MESBOX
+			gosub *make_mesbox
+			swbreak
+		case ID_DEL
+			sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$303
+			swbreak
+		case ID_TOP
+			gosub *goto_top
+			swbreak
+		case ID_GOTO
+			gosub *goto_line
+			swbreak
+		case ID_BOTTOM
+			gosub *goto_bottom
+			swbreak
+		case ID_STATUS
+			in_status^1
+			repeat 2
+			gsel used_box^(1-cnt)
+			gosub *label
+			if in_status{
+				stbar_ini
+				stbar_text strf("line : %d",msgline+1)
+			}else{
+				clrobj ginfo_sel^1,ginfo_sel^1
+			}
+			gosub *set_menu
+			loop
+			swbreak
+		case ID_INDENT
+			auto_indent^1
+			gosub *set_menu
+			swbreak
+		case ID_FORMAT
+			msgdlg rep_easy("設定を初期化します。よろしう御座いますか。\n(保存した File は削除せられません。)",kanzi,kana),"設定の初期化",$104,2
+			if stat==6{
+				gosub *format_set
+			}
+			swbreak
+		case ID_NEDIT
+			if used_box!=0{
+				gsel 0,1
+				gsel used_box,-1
+				gsel 0
+				used_box=0
+				gosub *set_menu
+				width winx-ginfo_sizex+ginfo_winx+10,winy-ginfo_sizey+ginfo_winy+31,winpx,winpy
+				SetFocus hMesbox
+			}
+			swbreak
+		case ID_REDIT
+			if used_box!=1{
+				gsel 1,1
+				gsel used_box,-1
+				gsel 1
+				used_box=1
+				gosub *set_menu
+				width winx-ginfo_sizex+ginfo_winx,winy-ginfo_sizey+ginfo_winy+21,winpx,winpy
+				SetFocus hRich
+			}
+			swbreak
+		case ID_SEARCH
+			gosub *search
+			swbreak
+		case ID_SNEXT
+			gosub *search_next
+			swbreak
+		case ID_SBACK
+			gosub *search_back
+			swbreak
+		case ID_REPLACE
+			gosub *replace_
+			swbreak
+		case ID_SEGKANA
+			kana=0
+			gosub *set_menu
+			swbreak
+		case ID_OMKANA
+			kana=1
+			gosub *set_menu
+			swbreak
+		case ID_SEGZI
+			kanzi=0
+			gosub *screen_5
+			gosub *screen_7
+			gosub *screen_8
+			gsel used_box
+			gosub *set_menu
+			swbreak
+		case ID_RYAKUZI
+			kanzi=1
+			gosub *screen_5
+			gosub *screen_7
+			gosub *screen_8
+			gsel used_box
+			gosub *set_menu
+			swbreak
+		default
+			swbreak
+	swend
+	return
+
+*set_menu
+	newmenu the_menu,0
+	newmenu menu_file,1
+	newmenu menu_edit,1
+	newmenu menu_search,1
+	newmenu menu_view,1
+	newmenu menu_xime,1
+	newmenu menu_set,1
+	newmenu set_editor,1
+	newmenu set_kana,1
+	newmenu set_kanzi,1
+	newmenu menu_tool,1
+	newmenu menu_help,1
+	addmenu the_menu,"&File",menu_file,$10
+	addmenu menu_file,"&N/新規作成\tCTRL+N",ID_NEW
+	addmenu menu_file,rep_easy("&L/讀込...\tCTRL+L",kanzi,kana),ID_LOAD
+	addmenu menu_file,rep_easy("&R/再讀込",kanzi,kana),ID_RELOAD,(filename=="")*3
+	addmenu menu_file,"&S/上書き保存\tCTRL+S",ID_SAVE
+	addmenu menu_file,"&A/名前を付けて保存...\tCTRL+SHIFT+S",ID_SAVEAS
+	addmenu menu_file,"",,$800
+	addmenu menu_file,"&P/印刷... [不完全]\tCTRL+P",ID_PRINT
+	addmenu menu_file,"&U/ Page 設定...",ID_PAGE
+	addmenu menu_file,"",,$800
+	addmenu menu_file,"&Q/終了\tGRPH+f･4",ID_QUIT
+	addmenu the_menu,"&E/編輯",menu_edit,$10
+	addmenu menu_edit,"&U/元に戻す\tCTRL+Z",ID_UNDO
+	addmenu menu_edit,"",,$800
+	addmenu menu_edit,"&M/移動\tCTRL+X",ID_MOVE
+	addmenu menu_edit,rep_easy("&C/複寫\tCTRL+C",kanzi,kana),ID_COPY
+	addmenu menu_edit,"&P/貼付\tCTRL+V",ID_PASTE
+	addmenu menu_edit,"&D/削除\tDEL",ID_DEL
+	addmenu menu_edit,"",,$800
+	addmenu menu_edit,rep_easy("&A/全て選擇\tCTRL+A",kanzi,kana),ID_ALL
+	addmenu menu_edit,"&E/編輯禁止",ID_NOTEDIT,notedit*8
+	addmenu menu_edit,"",,$800
+	addmenu menu_edit,"&T/先頭行に移動\tCTRL+T",ID_TOP
+	addmenu menu_edit,"&B/最終行に移動\tCTRL+B",ID_BOTTOM
+	addmenu menu_edit,"&J/指定行に移動...\tSHIFT+f･5",ID_GOTO
+	addmenu the_menu,rep_easy("&S/檢索",kanzi,kana),menu_search,$10
+	addmenu menu_search,rep_easy("&F/文字列の檢索...\tCTRL+F",kanzi,kana),ID_SEARCH
+	addmenu menu_search,rep_easy("&N/次を檢索\tf･3",kanzi,kana),ID_SNEXT
+	addmenu menu_search,rep_easy("&B/前を檢索\tSHIFT+f･3",kanzi,kana),ID_SBACK
+	addmenu menu_search,"&R/文字列の置換...\tCTRL+R",ID_REPLACE
+	addmenu the_menu,"&V/表示",menu_view,$10
+	addmenu menu_view,"&W/右端で折り返す",ID_MESBOX,(used_box==0)*cuck_mbox*8+(used_box==1)*3
+	addmenu menu_view,"&S/ステイタス・バァ",ID_STATUS,in_status*8
+	addmenu the_menu,"&XIME",menu_xime,$10
+	addmenu menu_xime,"&C/コンパイル+再生\tf･5",ID_PLAY
+	addmenu menu_xime,"&P/再生\tf･6",ID_PLAYONLY
+	addmenu menu_xime,"&O/コンパイルのみ\tf･7",ID_COMPILE
+	addmenu menu_xime,"&S/停止\tESC",ID_STOP
+	addmenu the_menu,"&T/道具",menu_tool,$10
+	addmenu menu_tool,rep_easy("&I/ MIDI File から取り込む... [未實裝]",kanzi,kana),ID_INMIDI,3
+	addmenu menu_tool,"&O/ MIDI File に出力...\tCTRL+f･9",ID_MIDI
+	addmenu the_menu,"&O/オプション",menu_set,$10
+	addmenu menu_set,"&Font...",ID_FONT
+	addmenu menu_set,rep_easy("&B/背景色... [未實裝]",kanzi,kana),ID_COLOUR,3
+	addmenu menu_set,"&A/自動インデント [不完全]",ID_INDENT,auto_indent*8
+	addmenu menu_set,"&E/エディタ [未實裝]",set_editor,$13
+	addmenu set_editor,"&N/標準 (メモ帳式)",ID_NEDIT,(used_box^1)*8
+	addmenu set_editor,"&R/リッチ・エディット (ワードパッド式)",ID_REDIT,used_box*8
+	addmenu menu_set,rep_easy("&S/假名遣ひ",kanzi,kana),set_kana,$10
+	addmenu set_kana,rep_easy("&T/歴史的假名遣",kanzi,0),ID_SEGKANA,(kana^1)*8
+	addmenu set_kana,rep_easy("&S/表音假名遣ひ",kanzi,1),ID_OMKANA,kana*8
+	addmenu menu_set,rep_easy("&T/字體",kanzi,kana),set_kanzi,$10
+	addmenu set_kanzi,rep_easy("&T/正字體",0,kana),ID_SEGZI,(kanzi^1)*8
+	addmenu set_kanzi,rep_easy("&S/略字體",1,kana),ID_RYAKUZI,kanzi*8
+	addmenu menu_set,"&C/初期化...",ID_FORMAT
+	addmenu the_menu,"&H/ヘルプ",menu_help,$10
+	addmenu menu_help,rep_easy("&H/ヘルプの表示... [未實裝]\tSHIFT+f･1",kanzi,kana),ID_HELP
+	applymenu the_menu
+	return
+
+*shortcut
+	if windlg==0&&(ginfo_sel==0||ginfo_sel==1){
+		stbar_text strf("line : %d",msgline+1)
+	}
+	keybd=wparam and$ff
+	if keybd==0||lparam>>30!=0||(keybd<19&&keybd>15): return
+	getkey indexus,16
+	keybd or indexus<<8
+	getkey indexus,17
+	keybd or indexus<<9
+	if (ginfo_act==0||ginfo_act==1)&&(ginfo_sel==0||ginfo_sel==1){
+		if keybd==116||keybd==123{
+			mmlset 0,text
+			if stat==0: mmlplay 0
+			gosub *comperr
+		}
+		if keybd==27{
+			mmlstop
+		}
+		if keybd==($200 or'A'){
+			gosub *choose_all
+		}
+		if keybd==($200 or'N'){
+			gosub *hangout
+			if status{
+				text=""
+				text_hangout=text
+				objprm 0,text
+				filename=""
+				if notedit: gosub *notedit_
+				gosub *set_menu
+			}
+		}
+		if keybd==($200 or'L')||keybd==($200 or'O'){
+			gosub *load
+		}
+		if keybd==($200 or'S'){
+			if filename!=""{
+				overwrite=1
+			}else{
+				overwrite=0
+			}
+			gosub *save
+		}
+		if keybd==($200 or$100 or'S'){
+			overwrite=0
+			gosub *save
+		}
+		if keybd==($200 or 120){
+			gosub *out_midi
+		}
+		if keybd==117{
+			mmlplay 0
+		}
+		if keybd==118{
+			mmlset 0,text
+			gosub *comperr
+		}
+		if keybd==112{
+			keybd_event 121,-1
+		}
+		if keybd==113{
+			keybd_event 18,0
+			keybd_event 'E',-1
+			keybd_event 18,1
+		}
+		if keybd==($200 or'P'){
+			gosub *printout
+		}
+		if keybd==($100 or 112){
+			gosub *help
+		}
+		if keybd==($200 or'T'){
+			gosub *goto_top
+			keybd_event 17,0
+		}
+		if keybd==($100 or 116){
+			gosub *goto_line
+		}
+		if keybd==($200 or'B'){
+			keybd_event 17,1
+			gosub *goto_bottom
+			keybd_event 17,0
+		}
+		if (keybd and$ff)==13{
+			if auto_indent{
+				notesel text
+				noteget dispos,msgline
+				sendmsg hMesbox,$B0
+				tab_indent=""
+				repeat strlen(dispos)
+				if peek(dispos,cnt)==9||peek(dispos,cnt)==32{
+					tab_indent+strf("%c",peek(dispos,cnt))
+				}else{
+					break
+				}
+				loop
+				wait 1
+				sendmsg hMesbox,$c2,,tab_indent
+				noteget dispos,msgline
+				if how_many(dispos,"{")-how_many(dispos,"}")+1>1&&strmid(dispos,strlen(dispos)-1,1)=="="{
+					keybd_event 9,-1
+				}
+				noteunsel
+			}
+		}
+		if keybd==($100 or 221){
+			if auto_indent{
+				notesel text
+				noteget dispos,msgline
+				sendmsg hMesbox,$b0,varptr(locate)
+				sendmsg hMesbox,$bb,msgline
+				repeat locate-stat
+				if strmid(dispos,cnt,1)=="\t"||strmid(dispos,cnt,1)==" "{
+					if cnt==locate-stat-1{
+						repeat 2
+						keybd_event 8,-1
+						loop
+						keybd_event 221,-1
+					}
+				}else{
+					break
+				}
+				loop
+				noteunsel
+			}
+		}
+		if keybd==115||keybd==($200 or'F'){
+			gosub *search
+		}
+		if keybd==114{
+			gosub *search_next
+		}
+		if keybd==($100 or 114){
+			gosub *search_back
+		}
+		if keybd==($200 or'R'){
+			gosub *replace_
+		}
+	}
+	if ginfo_sel==2{
+		if keybd==27{
+			gosub *print_end
+		}
+	}
+	if ginfo_sel==4{
+		if keybd==27{
+			gosub *view_end
+		}
+	}
+	if ginfo_sel==5{
+		if keybd==27{
+			gosub *page_end
+		}
+	}
+	if ginfo_sel==6{
+		if keybd==27{
+			gosub *gline_end
+		}
+		if keybd==13{
+			gosub *gline_ok
+		}
+	}
+	if ginfo_act==7{
+		if keybd==27{
+			gosub *search_end
+		}
+		if keybd==13{
+			gosub *search_next
+		}
+	}
+	if ginfo_act==8{
+		if keybd==27{
+			gosub *replace_end
+		}
+		if keybd==13{
+			gosub *search_next
+		}
+	}
+	return
+
+*choose_all
+	sendmsg (used_box==0)*hMesbox+(used_box==1)*hRich,$b1,0,-1
+	return
+
+*hangout
+	dim status
+	if text_hangout!=text{
+		msgdlg rep_easy("内容が變更せられてゐます。\n保存しますか。",kanzi,kana),"確認",3+$200,2
+		dialog_choice=stat
+		if dialog_choice==2: status=0
+		if dialog_choice==6{
+			if filename!=""{
+				overwrite=1
+			}else{
+				overwrite=0
+			}
+			gosub *save
+			dim overwrite
+		}
+		if dialog_choice==7: status=1
+	}else{
+		status=1
+	}
+	dim dialog_choice
+	return
+
+*save
+	if overwrite{
+		notesel text
+		notesave filename
+		text_hangout=text
+		status=1
+	}else{
+		notesel text
+		dialog "xim",17
+		if stat{
+			if getpath(refstr,2)==""{
+				filename=refstr+".xim
+			}else{
+				filename=refstr
+			}
+			notesave filename
+			text_hangout=text
+			status=1
+		}else{
+			status=0
+		}
+		gosub *set_menu
+	}
+	return
+
+*vofari
+	if iparam==0{
+		if wparam==0||wparam==1{
+			gosub *save_set
+			gosub *hangout
+			if status: end
+		}
+		if wparam==2{
+			gosub *print_end
+			return
+		}
+		if wparam==4{
+			gosub *view_end
+			return
+		}
+		if wparam==5{
+			gosub *page_end
+			return
+		}
+		if wparam==6{
+			gosub *gline_end
+			return
+		}
+		if wparam==7{
+			gosub *search_end
+			return
+		}
+		if wparam==8{
+			gosub *replace_end
+			return
+		}
+	}
+	return
+
+*save_set
+	writeset "window","sizex",winx
+	writeset "window","sizey",winy
+	writeset "window","posx",winpx
+	writeset "window","posy",winpy
+	writeset "font","name",fontname,str
+	writeset "font","size",fontsize
+	writeset "font","style",fontstyle
+	writeset "object","stbar",in_status
+	writeset "object","return",cuck_mbox
+	writeset "object","indent",auto_indent
+	writeset "object","rich",used_box
+	return
+
+*load_set
+	readset "window","sizex",winx,10
+	readset "window","sizey",winy,10
+	readset "window","posx",winpx,10
+	readset "window","posy",winpy,10
+	readset "font","name",fontname,100,str
+	readset "font","size",fontsize,6
+	readset "font","style",fontstyle,3
+	readset "object","stbar",in_status,2
+	readset "object","return",cuck_mbox,2
+	readset "object","indent",auto_indent,2
+	readset "object","rich",used_box,2
+	if winpx>=ginfo_dispx{
+		winpx=(ginfo_dispx-winx)/2
+	}
+	if ginfo_dispy>winpy{
+		let_int winpy
+	}else{
+		winpy=(ginfo_dispy-winy)/2
+	}
+	let_int fontsize
+	let_int fontstyle
+	let_int in_status
+	let_int cuck_mbox
+	let_int auto_indent
+	let_int used_box
+	return
+
+*out_midi
+	dialog "mid;*.midi",17,"スタンダァド MIDI File
+	if stat{
+		mmlset 0,text
+		if stat{
+			gosub *comperr
+			return
+		}
+		sheet=mmllist@modxime(0)
+		notesel sheet
+		sdim binary_data,25+notemax*7+3
+		scale_data='M','T','h','d',0,0,0,6,0,0,0,1,1,244,'M','T','r','k',0,0,0,0
+		byte=22
+		foreach scale_data
+		poke binary_data,cnt,scale_data(cnt)
+		loop
+		repeat notemax
+		if cnt{
+			noteget sheet_data_,cnt-1
+		}else{
+			sheet_data_="0:0:0:0"
+		}
+		noteget sheet_data,cnt
+		split sheet_data,":",time,ch,no,vel
+		split sheet_data_,":",time_
+		time=0+time
+		ch=0+ch
+		vel=0+vel
+		repeat (time-time_)/128+1
+		naru(cnt)=(time-time_)/powf(128,cnt)\128
+		loop
+		repeat limit((time-time_)/128,0)
+		if naru((time-time_)/128-cnt)!=0{
+			poke binary_data,byte,naru((time-time_)/128-cnt)+$80
+			byte+
+		}
+		loop
+		poke binary_data,byte,naru(0)
+		byte+
+		if strmid(no,0,1)=="@"{
+			poke binary_data,byte,$c0+ch
+			poke binary_data,byte+1,0+strmid(no,1,strlen(no)-1)
+			byte+2
+		}else: if strmid(no,0,1)=="P"{
+			poke binary_data,byte,$b0+ch
+			poke binary_data,byte+1,$0a
+			poke binary_data,byte+2,0+strmid(no,1,strlen(no)-1)
+			byte+3
+		}else{
+			no=0+no
+			poke binary_data,byte+1,no
+			if vel{
+				poke binary_data,byte,$90+ch
+				poke binary_data,byte+2,vel
+			}else{
+				poke binary_data,byte,$80+ch
+				poke binary_data,byte+2,0
+			}
+			byte+3
+		}
+		loop
+		if vartype(mml_title@modxime)==2{
+			poke binary_data,byte,0
+			poke binary_data,byte+1,$ff
+			poke binary_data,byte+2,3
+			byte+3
+			repeat 4
+			naru(cnt)=strlen(mml_title@modxime)/powf(128,cnt)\128
+			loop
+			repeat 3
+			if naru(3-cnt)!=0{
+				poke binary_data,byte,naru(3-cnt)+$80
+				byte+
+			}
+			loop
+			poke binary_data,byte,naru(0)
+			byte+
+			repeat strlen(mml_title@modxime)
+			poke binary_data,byte,peek(mml_title@modxime,cnt)
+			byte+
+			loop
+		}
+		poke binary_data,byte,0
+		poke binary_data,byte+1,$ff
+		poke binary_data,byte+2,$2f
+		poke binary_data,byte+3,0
+		byte+4
+		repeat 4
+		poke binary_data,cnt+18,(byte-22)/powf(256,3-cnt)\256
+		loop
+		if getpath(refstr,2)==""{
+			filename_midi=refstr+".mid"
+		}else{
+			filename_midi=refstr
+		}
+		bsave filename_midi,binary_data,byte
+		dialog "MIDI 出力が完了しました。\n["+filename_midi+"]",0,"MIDI 出力
+	}
+	return
+
+*in_midi
+	return
+
+*load
+	gosub *hangout
+	if status{
+		notesel text
+		dialog "xim",16
+		if stat{
+			if getpath(refstr,2)==""{
+				filename=refstr+".xim"
+			}else{
+				filename=refstr
+			}
+			noteload filename
+			text_hangout=text
+			objprm 0,text
+			if notedit: gosub *notedit_
+			gosub *set_menu
+		}
+		noteunsel
+	}
+	return
+
+*notedit_
+	notedit^1
+	clrobj 0,0
+	pos 0,0
+	gosub *set_mesbox
+	gosub *set_menu
+	return
+
+*comperr
+	switch stat
+		case 1
+			error_mes "マクロの記述に誤りが有ります。
+			swbreak
+		case 2
+			error_mes "アトリビュト値が異常であります。
+			swbreak
+		case 3
+			error_mes "音長が異常であります。
+			swbreak
+		case 4
+			error_mes "オクタヴが異常であります。
+			swbreak
+		case 5
+			error_mes "チャンネル値が異常であります。
+			swbreak
+		case 6
+			error_mes rep_easy("プログラム・チェインヂ番號が異常であります。",kanzi,kana)
+			swbreak
+		case 7
+			error_mes "Loop の記述に誤りが有ります。
+			swbreak
+		case 8
+			error_mes rep_easy("Loop 外で \"/\" が使はれてゐます。",kanzi,kana)
+			swbreak
+		case 9
+			error_mes "Loop のネストが深すぎます。
+			swbreak
+		case 10
+			error_mes "定義済みのマクロであります。
+			swbreak
+		case 11
+			error_mes "未定義のマクロであります。
+			swbreak
+	swend
+	objsel 0
+	return
+
+*help
+	Exec "help.exe
+	return
+
+*printout
+	if cannot_printout{
+		dialog rep_easy("hspprint.dll が見つからないため印刷を行はれません。",kanzi,kana),1,"エラー
+		return
+	}
+	if pnum==0{
+		dialog rep_easy("利用可能なプリンタが見つからないため印刷を行はれません。",kanzi,kana),1,"エラー
+		return
+	}
+	gsel used_box
+	wx_=ginfo_wx1
+	wy_=ginfo_wy1
+	EnableWindow hwnd,0
+	propprn sx,sy,useid,0
+	propprn sx_,sy_,useid,3
+	sx=limit(sx,1):sy=limit(sy,1)
+	sx_=limit(sx_,1):sy_=limit(sy_,1)
+	pmx_time=1.*sx/sx_
+	pmy_time=1.*sy/sy_
+	buffer 3,sx,sy
+	font print_fname,(pmx_time+pmy_time)*pt2mm(print_pts)/2
+	color 0,0,0
+	print_text=text+"\n
+	strrep print_text,"\t","        "
+	notesel print_text
+	for i,0,notemax
+	noteget test_data,i
+	if print_width*2<strlen(test_data){
+		noteadd strmid(test_data,print_width*2,strlen(test_data)-print_width*2),i+1,0
+	}
+	test_data=strmid(test_data,0,print_width*2)
+	repeat strlen(test_data)
+	dat_byte=peek(test_data,cnt)
+	if char_full{
+		char_full=0
+	}else{
+		if $20<=dat_byte&&dat_byte<=$7E||($A1<=dat_byte&&dat_byte<=$DF){
+			pos pmx_time*((0.0+sx_-print_left-print_right)*cnt/(print_width*2)+((0.0+sx_-print_left-print_right)/(print_width*2)-pt2mm(print_pts)/2)/2+print_left),pmy_time*((0.0+sy_-print_top-print_bottom)*i/print_height+((0.0+sy_-print_top-print_bottom)/print_height-pt2mm(print_pts))/2+print_top)
+			print strf("%c",dat_byte)
+		}else: if $81<=dat_byte&&dat_byte<=$9F||($E0<=dat_byte&&dat_byte<=$FC)&&(cnt<strlen(test_data)-1){
+			pos pmx_time*((0.0+sx_-print_left-print_right)*cnt/(print_width*2)+((0.0+sx_-print_left-print_right)/print_width-pt2mm(print_pts))/2+print_left),pmy_time*((0.0+sy_-print_top-print_bottom)*i/print_height+((0.0+sy_-print_top-print_bottom)/print_height-pt2mm(print_pts))/2+print_top)
+			print strf("%c%c",dat_byte,peek(test_data,cnt+1))
+			char_full=1
+		}
+	}
+	loop
+	next
+	noteunsel
+	color 255,255,255
+	repeat 4
+	boxf (cnt==3)*(-pmx_time*print_right+ginfo_sx),(cnt==1)*(-pmy_time*print_bottom+ginfo_sy),(cnt!=2)*ginfo_sx+(cnt==2)*(pmx_time*print_left)-1,(cnt!=0)*ginfo_sy+(cnt==0)*(pmy_time*print_top)-1
+	loop
+	color 0,0,0
+	gsel 2
+	width ,,wx_+16,wy_+16
+	gsel 2,1
+	return
+
+*set_printer
+	prndialog useid
+	return
+
+*go_printout
+	gsel 3
+	if filename!=""{
+		doc_name=getpath(filename,8)
+	}else{
+		doc_name="(無題)
+	}
+	execprn useid,0,0,sx,sy,0,0,sx,sy,doc_name
+	gosub *print_end
+	return
+
+*update_pinfo
+	exist dir_exe+"\\hspprint.dll
+	if strsize==-1{
+		cannot_printout=1
+		return
+	}
+	syscolor 4
+	boxf
+	syscolor 7
+	enumprn plist
+	pnum=stat
+	getdefprn def_printer
+	notesel plist
+	repeat pnum
+	noteget s1,cnt
+	if s1==def_printer{
+		useid=cnt
+		noteadd s1+" (規定)",cnt,1
+	}
+	loop
+	noteunsel
+	objsize 480
+	objmode 2,1
+	pos (ginfo_winx-480)/2,16
+	print rep_easy("プリンタを選擇してください：",kanzi,kana)
+	listbox useid,150,plist
+	button gosub "印刷",*go_printout
+	button gosub "印刷 Preview",*print_view
+	button gosub "プリンタの設定",*set_printer
+	button gosub "プリンタ情報の更新",*update_pinfo
+	return
+
+*print_end
+	gsel 2,-1
+	gsel used_box,1
+	EnableWindow hwnd,1
+	return
+
+*view_end
+	gsel 4,-1
+	gsel used_box,1
+	EnableWindow hwnd,1
+	windlg=0
+	return
+
+*print_view
+	windlg=1
+	gosub *print_end
+	gsel used_box
+	EnableWindow hwnd,0
+	gsel 4
+	title "印刷 Preview
+	width double(sx)/(1.1*sy/ginfo_dispy),1f*ginfo_dispy/1.1,(pos_taskbar()==2)*width_taskbar(),(pos_taskbar()==1)*height_taskbar()
+	gzoom ginfo_winx,ginfo_winy,3,0,0,sx,sy,1
+	gsel 4,1
+	return
+
+*win_dialog
+	SetWindowLong hwnd,-16,GetWindowLong(hwnd,-16)and$70000^GetWindowLong(hwnd,-16)
+	SetWindowLong hwnd,-8,mwhw(used_box)
+	SetWindowPos hwnd,0,0,0,0,0,39
+	DeleteMenu GetSystemMenu(hwnd),$f000
+	DeleteMenu GetSystemMenu(hwnd),$f020
+	DeleteMenu GetSystemMenu(hwnd),$f030
+	DeleteMenu GetSystemMenu(hwnd),$f120
+	return
+
+*page_ok
+	print_width=print_width_
+	print_height=print_height_
+	print_top=print_top_
+	print_bottom=print_bottom_
+	print_left=print_left_
+	print_right=print_right_
+	print_pts=print_pts_
+	print_fname=print_fname_
+	gosub *page_end
+	return
+
+*page_end
+	gsel 5,-1
+	objint print_width,2
+	objint print_height,3
+	objint print_left,4
+	objint print_top,5
+	objint print_right,6
+	objint print_bottom,7
+	objint print_pts,8
+	objprm 9,print_fname
+	gsel used_box,1
+	EnableWindow hwnd,1
+	return
+
+*print_font
+	fontdlg dispos
+	if stat{
+		print_fname_=refstr
+		print_pts_=dispos(2)
+	}
+	objprm 9,print_fname_
+	objint print_pts_,8
+	return
+
+*make_mesbox
+	cuck_mbox^1
+	clrobj 0,0
+	pos 0,0
+	gosub *set_mesbox
+	gosub *set_menu
+	return
+
+*goto_top
+	if used_box==0{
+		sendmsg hMesbox,$b1
+	}else: if used_box==1{
+		sendmsg hRich,$b1
+		sendmsg hRich,$b7
+	}
+	return
+
+*goto_line
+	gsel used_box
+	wx_=ginfo_wx1
+	wy_=ginfo_wy1
+	EnableWindow hwnd,0
+	gsel 6
+	objprm 0,msgline+1
+	width ,,wx_,wy_+45
+	gsel 6,1
+	objsel 0
+	return
+
+*gline_ok
+	gline_ok_=1
+	gosub *gline_end
+	return
+
+*gline_end
+	gsel 6,-1
+	gsel used_box,1
+	EnableWindow hwnd,1
+	objsel 0
+	if gline_ok_{
+		if used_box==0{
+			notesel text
+			go_line=0
+			repeat what_line-1
+			noteget work,cnt
+			go_line+strlen(work)+2
+			loop
+			go_line=strlen_index(box_index,strmid(text,0,go_line))
+			sendmsg hMesbox,$b1,go_line,go_line
+			noteunsel
+		}else: if used_box==1{
+			sendmsg hRich,$b1,-1
+			sendmsg hRich,$bb,what_line-1
+			go_line(0)=stat
+			sendmsg hRich,$bb,what_line
+			go_line(1)=stat
+			sendmsg hRich,$b7,0,go_line(0)
+			sendmsg hRich,$b1,go_line(0),go_line(0)
+			sendmsg hRich,$b1,go_line(0),go_line(1)-2
+			sendmsg hRich,$b7,0,go_line(0)
+		}
+		gline_ok_=0
+	}
+	return
+
+*goto_bottom
+	if used_box==0{
+		sendmsg hMesbox,$ba
+		line_max=stat
+		notesel text
+		go_line=0
+		repeat line_max-1
+		noteget work,cnt
+		go_line+strlen(work)+2
+		loop
+		go_line=strlen_index(box_index,strmid(text,0,go_line))
+		sendmsg hMesbox,$b1,go_line,go_line
+		noteunsel
+	}else: if used_box==1{
+		sendmsg hRich,$ba
+		line_max=stat
+		sendmsg hRich,$bb,line_max
+		go_line=stat
+		sendmsg hRich,$b1,go_line,go_line
+		sendmsg hRich,$b7
+	}
+	return
+
+*set_msgline
+	sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$c9,-1
+	msgline=stat
+	return
+
+*set_mesbox
+	mesbox text,ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,5-notedit-4*cuck_mbox
+	hMesbox=objinfo_hwnd(stat)
+	return
+
+*make_bone
+	prgname="XIME Is not Music Environment!!
+	width winx-ginfo_sizex+ginfo_winx,winy-ginfo_sizey+ginfo_winy,winpx,winpy
+	SetWindowLong hwnd,-16,GetWindowLong(hwnd,-16)or$10000 or$40000
+	return
+
+*chg_font
+	sendmsg hRich,$b1,0,-1
+	mref bmscr,67
+	dim cFormat,15
+	dc=GetDC(hRich)
+	cFormat=60,$e800000f,fontstyle,0+1f*fontsize*1440/GetDeviceCaps(dc,$5A)
+	ReleaseDC hRich,dc
+	cFormat(5)=bmscr(40)
+	poke cFormat,24,$80
+	poke cFormat,26,fontname
+	logfont=bmscr(39)
+	if bmscr(38)!=logfont{
+		logfont=bmscr(38)
+		GetObject holdfon,60,varptr(lf)
+		hFont=CreateFontIndirect(varptr(lf))
+	}
+	sendmsg hRich,$30,hFont,1
+	sendmsg hRich,$444,1,varptr(cFormat)
+	sendmsg hRich,$b1
+	SetFocus hRich
+	return
+
+*format_set
+	gosub *normal_set
+	width,,(ginfo_dispx-ginfo_winx)/2,(ginfo_dispy-ginfo_winy)/2
+	gosub *save_set
+	return
+
+*search_next
+	repeat 2
+	gsel 7
+	sendmsg objinfo_hwnd(3-cnt),$f0
+	if stat{
+		searching cnt
+	}
+	gsel used_box,1
+	loop
+	return
+
+*search_back
+	repeat 2
+	gsel 7
+	sendmsg objinfo_hwnd(2+cnt),$f0
+	if stat{
+		searching cnt
+	}
+	gsel used_box,1
+	loop
+	return
+
+*search
+	search_dialog=1
+	gsel 7,1
+	width,,winpx+80,winpy+64
+	objsel 0
+	gunsel
+	return
+
+*search_end
+	search_dialog=0
+	gsel 7,-1
+	gsel used_box,1
+	if used_box==0{
+		objsel 0
+	}
+	return
+
+*normal_set
+	fontname="FixedSys
+	fontsize="19
+	fontstyle="0
+	in_status="1
+	cuck_mbox="0
+	auto_indent="0
+	used_box="0
+	return
+
+*replace_
+	gsel 8,1
+	width,,winpx+80,winpy+64
+	objsel 0
+	gunsel
+	return
+
+*replace_all
+	if used_box==0{
+		gsel 0,1
+		if keyword!=""{
+			strrep text,keyword,keyword_rep
+		}
+		objprm 0,text
+		gunsel
+	}
+	return
+
+*replace_end
+	gsel 8,-1
+	gunsel 1
+	if used_box==0{
+		objsel 0
+	}
+	return
+
+*screen_5
+	screen 5,18*16,17*16+32,6
+	gosub *win_dialog
+	title "Page 設定
+	syscolor 4
+	boxf
+	syscolor 7
+	objsize 100,24
+	pos (ginfo_winx/2-100)/2,17*16+4
+	button gosub "OK",*page_ok
+	pos (ginfo_winx/2*3-100)/2,17*16+4
+	button gosub "キャンセル",*page_end
+	objsize 48,16
+	pos 64,32
+	input print_width_
+	SetWindowLong objinfo_hwnd(stat),-16,$50010082
+	pos 12*16,32
+	input print_height_
+	SetWindowLong objinfo_hwnd(stat),-16,$50010082
+	pos 64,112
+	input print_left_
+	SetWindowLong objinfo_hwnd(stat),-16,$50010082
+	input print_top_
+	SetWindowLong objinfo_hwnd(stat),-16,$50010082
+	pos 12*16,112
+	input print_right_
+	SetWindowLong objinfo_hwnd(stat),-16,$50010082
+	input print_bottom_
+	SetWindowLong objinfo_hwnd(stat),-16,$50010082
+	objsize 96,16
+	pos 96,224
+	input print_pts_
+	SetWindowLong objinfo_hwnd(stat),-16,$50010082
+	objsize 128,16
+	pos 96,208
+	input print_fname_
+	pos 14*16,208
+	objsize 32,32
+	button gosub rep_easy("參照",kanzi,kana),*print_font
+	pos 0,0
+	prints rep_easy({"
+		┏━━字數━━━━━━━━━━━━┓
+		┃　　　　　　　　　　　　　　　　┃
+		┃　橫：　　　字　　縱：　　　字　┃
+		┃　　　　　　　　　　　　　　　　┃
+		┗━━━━━━━━━━━━━━━━┛
+		┏━━餘白━━━━━━━━━━━━┓
+		┃　　　　　　　　　　　　　　　　┃
+		┃　左：　　　mm　　右：　　　mm　┃
+		┃　上：　　　mm　　下：　　　mm　┃
+		┃　　　　　　　　　　　　　　　　┃
+		┗━━━━━━━━━━━━━━━━┛
+		┏━━Font━━━━━━━━━━━━┓
+		┃　　　　　　　　　　　　　　　　┃
+		┃　名前　：　　　　　　　　　　　┃
+		┃　サイズ：　　　　　　pts.　　　┃
+		┃　　　　　　　　　　　　　　　　┃
+		┗━━━━━━━━━━━━━━━━┛
+	"},kanzi,kana),msgothic,16
+	objint print_width_,2
+	objint print_height_,3
+	objint print_left_,4
+	objint print_top_,5
+	objint print_right_,6
+	objint print_bottom_,7
+	objint print_pts_,8
+	return
+
+*screen_7
+	screen 7,484,111,6
+	gosub *win_dialog
+	title rep_easy("檢索",kanzi,kana)
+	syscolor 4
+	boxf
+	syscolor 7
+	font msgothic,12
+	pos 8,12
+	print rep_easy("檢索する文字列",kanzi,kana)
+	pos 96,6
+	input keyword,294,24
+	pos ginfo_winx,ginfo_winy
+	print "大文字と小文字を区別する"
+	objsize ginfo_mesx+32,ginfo_mesy
+	pos 8,80
+	chkbox rep_easy("大文字と小文字を區別する",kanzi,kana),distinguish
+	objsize 50
+	pos 300,55
+	chkbox "上へ",search_up
+	sendmsg objinfo_hwnd(stat),$f4,9
+	pos 300,75
+	chkbox "下へ",search_down
+	sendmsg objinfo_hwnd(stat),$f4,9
+	objsize 108,70
+	pos 280,35
+	groupbox "方向"
+	objsize 80,24
+	pos 395,6
+	button gosub rep_easy("次を檢索",kanzi,kana),*search_next
+	pos ginfo_cx,ginfo_cy+5
+	button gosub "キャンセル",*search_end
+	return
+
+*screen_8
+	screen 8,500,156,6
+	gosub *win_dialog
+	title "置換"
+	syscolor 4
+	boxf
+	syscolor 7
+	input keyword,320,24
+	input keyword_rep,320,24
+	button gosub rep_easy("次を檢索",kanzi,kana),*search_next
+	button gosub "全て置換",*replace_all
+	return
+
+*drop_files
+	hDrop=wparam
+	sdim dropped,256
+	DragQueryFile hDrop,0,varptr(dropped),256
+	Load2 dropped
+	DragFinish hDrop
+	return

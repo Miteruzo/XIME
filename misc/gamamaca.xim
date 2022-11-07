@@ -1,0 +1,90 @@
+#title "釜馬車走る (ガママシャ・ダルリンダ)
+#copy "朝鮮労動党軽音部 (ジョソンロドンダン・ヒョンインブ)
+
+{C(%1)=c%1&e%1&g%1}
+{Dm(%1)=d%1&f%1&a%1}
+{D(%1)=d%1&f#%1&a%1}
+{Em(%1)=e%1&g%1&b%1}
+{E(%1)=e%1&g#%1&b%1}
+{E7(%1)=e%1&g#%1&b%1&d^%1}
+{Fm(%1)=f%1&a-%1&c^%1}
+{F(%1)=f%1&a%1&c^%1}
+{F#m(%1)=f#%1&a%1&c#^%1}
+{F#7(%1)=f#%1&a#%1&c#^%1&e^%1}
+{G(%1)=g%1&b%1&d^%1}
+{G7(%1)=g%1&b%1&d^%1&f^%1}
+{Am(%1)=a%1&c^%1&e^%1}
+{A7(%1)=a%1&c#^%1&e^%1&g^%1}
+{Bm(%1)=b%1&d^%1&f#^%1}
+
+t152
+
+{melody=
+	@62 l8 [v96 bbb<dc#>bba
+	bbb<dc#>ab4
+	a4b<dc#>bba
+	bf#f#def#e4
+	f#4f#daaaf#
+	f#f#4abb4.
+	f#f#f#abbb4
+	f#<c#c#c#c#4>b4
+	<f#1
+	r1
+	ee4eeef#4
+	dddf#c#2
+	>bbbbb<d4c#
+	c#>bbaf#2
+	f#f#f#abbbf#
+	b4<dc#>bbf#4
+	<c#.c#16c#c#c#c#f#f#
+	ef#4e>b2
+	<f#4f#4f#4e4
+	f#4.af#2
+	e4def#4.d
+	>b1
+	f#f#f#abbbf#
+	b4<dc#>abb4
+	<d4d>ab<d4c#
+	>bb16b16<d>b<d4e4
+	f#.f#16f#f#f#f#f#f#
+	af#2..
+	e.e16eeeeee
+	f#e2rf#4
+	dddf#eeef#
+	ed16d16c#>f#b2]2
+}
+
+{drum=
+	l8[[r1]9
+	rbrbrbb4
+	[r1]7
+	r2.b4
+	[r1]9
+	r<grgrgrg
+	r1
+	rgrgrgg4
+	r1
+	r2.>b4]2
+}
+
+{chord=
+	@36 v64 [{Bm(1)}{Bm(1)}{D(1)}
+	{Bm(2)}{Em(2)}{D(1)}{Bm(1)}
+	{Bm(1)}{F#m(1)}{Bm(1)}{Bm(1)}
+	{Em(1)}{Bm(2)}{F#7(2)}{Bm(1)}
+	{Bm(1)}{Bm(1)}{Bm(1)}
+	{F#7(1)}{F#7(2)}{Bm(2)}{D(1)}
+	{D(1)}{Em(2)}{F#7(2)}{Bm(1)}{Bm(1)}
+	{Bm(1)}{D(2)}{Bm(2)}{G(2.)}{A7(4)}
+	{D(1)}{D(1)}{Em(1)}
+	{Em(1)}{D(2)}{Em(2)}{F#m(2)}{Bm(2)}]2
+}
+
+!0 o4 {melody}
+!1 o3 r64 {melody}
+!2 o3 {chord}
+!3 o3 {chord}
+!4 @127 v64 o5 q-16 {drum}
+!5 @127 v127 o4 q-16 {drum}
+!6 @127 v127 o3 q-16 {drum}
+!7 @127 v127 o3 q-16 {drum}

@@ -1,0 +1,13 @@
+	step=16
+	Buffer 1
+	For y,0,ginfo_winy/step
+		For x,0,ginfo_winx/step
+			Color Rnd(256),Rnd(256),Rnd(256)
+			pSet x,y
+		Next
+	Next
+	Pos 0,0
+	PicLoad "mmlplay.ico",1
+	Screen 0,512,512
+	Pos 0,0
+	gZoom 512,512,1,0,0,32,32

@@ -1,0 +1,52 @@
+#module calendar
+
+#deffunc TenpouInit
+	gre_day=0,31,28,31,30,31,30,31,31,30,31,30,31
+	ten_day=0,29,30,29,30,29,30,29,30,29,30,29,30
+	NoteSel calendar@calendar
+		NoteLoad "calendar.txt
+		NoteGet start,0
+	NoteUnsel
+	Split start,",",start
+	start=Int(start)
+	Return
+
+#defcfunc TenpouCalendar int year,int month,int day,int flag
+	gre_day(2)+year\4==0&&year\100!=0||year\400==0
+	NoteSel calendar@calendar
+		NoteGet dat_year,year-start
+	NoteUnsel
+	Split dat_year,",",dat_year,dat_month,dat_day,leap
+	dat_year=Int(dat_year)-1
+	dat_month=Int(dat_month)
+	dat_day=Int(dat_day)
+	leap=Int(leap)
+	work=0
+	Repeat month
+		work+gre_day(cnt)
+	Loop
+	work+day-1
+	leap2=0
+	Repeat work
+		If dat_day>=ten_day(dat_month){
+			dat_day-ten_day(dat_month)
+			If leap==dat_month&&leap2==0{
+				leap2=1
+			}Else{
+				leap2=0
+				dat_month+
+			}
+			If dat_month>12{
+				dat_month=1
+				dat_year+
+			}
+		}
+		dat_day+
+	Loop
+	gre_day(2)-year\4==0&&year\100!=0||year\400==0
+	Return (flag==0)*dat_year or(flag==1)*dat_month or(flag==3)*dat_day or(flag==2)*leap2
+
+#global
+
+	TenpouInit
+	Print TenpouCalendar(2017,7,26,3)

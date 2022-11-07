@@ -1,0 +1,21 @@
+#title "net Æ ÊÏ¯À »Ù ËÄ
+
+t108
+
+!0 o3 @17
+!2 o4 @18
+!1 o2 @32 v80
+
+{A= 
+	l16 q-48 a4gab4g8<c4>g8<d8efgd b4 g4> a4gab4g8<c4>g8<d8efgd b4 g4>
+	< a4<edcd8e8d8cd8>b<c>b8g4 b4 a4 a4<edcd8e8d8cd8>b<c>b8g4 b4 a4>
+}
+{D= 
+	l16 a8.a<ag>ce a8.a<ag>ce a8.a<ag>ce a8.a<ag>ce a8.a<ag>ce a8.a<ag>ce a8.a<ag>ce a8.a<ag>ce
+	f8.f<fc>df f8.f<fc>df g8.g<ec>eg g8.g<ec>eg f8.f<fc>df f8.f<fc>df g8.g<ec>eg g8.g<ec>eg
+}
+
+!0 [{A}]5
+!2 [{A}]5
+!1 [{D}]5
+

@@ -1,0 +1,167 @@
+#title "SWEEP
+#copy "ONION software / kamitama
+
+t130
+                       
+!0 l1 v31 o5
+!0 @85 p47
+!0 f&d&>a+&g
+!0 <g&e&c&>a
+!0 <d+&c&>g+&f
+!0 <f&d&>a+&g
+
+!9 l8 v48 o4
+!9 @33 p64 c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e16<<v48d+16
+!9 d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e16
+!9 <<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&
+!9 d+&>>v79e16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16
+!9 <<d16v48c&d+&>>v79e16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16
+!9 d+&>>v79c16<<d16v48c&d+&>>v79e16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16
+!9 <<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e16<<v48d+16d+&>>v79c16<<d16v48c&
+!9 d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e16<<v48d+16d+&>>v79c16
+!9 <<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e16<<v48d+16
+!9 d+&>>v79c16<<d16
+
+{loop=
+	!0 <f&d&>a+&g
+	!0 <g&e&c&>a
+	!0 <d+&c&>g+&f
+	!0 <f&d&>a+&g
+	!0 <f&d&>a+&g
+	!0 <g&e&c&>a
+	!0 <d+&c&>g+&f
+	!0 <f&d&>a+&g
+	!0 <f&d&>a+&g
+	!0 <g&e&c&>a
+	!0 <d+&c&>g+&f
+	!0 <f&d&>a+&g
+	!0 <f&d&>a+&g
+	!0 <g&e&c&>a
+	!0 <d+&c&>g+&f
+	!0 <f&d&>a+&g
+	!0 <f&d&>a+&g
+	!0 <g&e&c&>a
+	!0 <d+&c&>g+&f
+	!0 <f&d&>a+&g
+	!0 <f&d&>a+&g
+	!0 <g&e&c&>a
+	!0 <d+&c&>g+&f
+	!0 <f&d&>a+&g
+	!0 <f&d&>a+&g
+	!0 <g&e&c&>a
+	!0 <d+&c&>g+&f
+	!0 <f&d&>a+&g
+                
+	!2 l8 v79 o4
+	!2 @37 p64 r1r1r1r1  q-32
+	!2 >>ffg>g<ffg>g<ffg>g<ffg>g<ffg>g<ffg>g<ffg>g<ffg>g
+	!2 <ffg>g<ffg>g<ffg>g<ffg>g<f16f16fg>g<ffg>g<ffg>g<ffg>g
+	!2 <ff16d+d+g>g16<c16gf16gff16d+d+g>g16<c16gf16gd+d+16c+c+f>f16a+16<fd+16f
+	!2 ff16d+d+g>g16<c16gf16g
+	!2 ffg>g<ffg>g<ffg>g<ffg>g<ffg>g<ffg>g<ffg>g<ffg>g16g16
+	!2 <ffg>g<ffg>g<ffg>g<ffg>g<f16f16fg>g<ffg>g<ffg>g<ffg>g
+	!2 <v88ff16d+d+g>g16<c16gf16gff16d+d+g>g16<c16gf16gd+d+16c+c+f>f16a+16<fd+16
+	!2 fff16d+d+g>g16<c16gf16g
+	!2 v79ffg>g<ffg>g<ffg>g<ffg>g<ffg>g<ffg>g<ffg>g<ffg>g
+	                                  
+	!3 l16 v64 o4 q-64
+	!3 @3 p55 r1r1r1r1
+	!3 v88c8g8<c8>a+4a8g8f8f8g8c8g4gfe4d8d+8>g8<g4f4d+fa+8a8g4.f4g8
+	!3 c8g8<c8>a+4a8g8f8f8g8c8g4gfe4d8d+8>g8<g4f4d+fa+8a8g4.f4g8
+	!3 v73f<d+c>a+cfg<cc>a+agfga+<c>ag<fcfcgfa+afccfg+g>g<fa+c>a+<fga+agfcfg<c
+	!3 d+dd+>a+agfga>gd+<da+ag&>d8
+	!3 cc+dd+fa+agfa+<cg>a+<dd+dcdd+fa+ccdd+>a+ccdd+d+f<cdd+>a+agdcdd+cda+<d+>a
+	!3 g8agfd+fgd+a+aga+afa+a
+	!3 fg1v88g2<c8>a+8g8f8g2...fg1
+	!3 r1r1r1r1r1r1r1r1
+	                                    
+	!4 l16 v32 o4 q-64
+	!4 @100 p75 r1r1r1r1
+	!4 v44c8g8<c8>a+4a8g8f8f8g8c8g4gfe4d8d+8>g8<g4f4d+fa+8a8g4.f4g8
+	!4 c8g8<c8>a+4a8g8f8f8g8c8g4gfe4d8d+8>g8<g4f4d+fa+8a8g4.f4g8
+	!4 v37f<d+c>a+cfg<cc>a+agfga+<c>ag<fcfcgfa+afccfg+g>g<fa+c>a+<fga+agfcfg<c
+	!4 d+dd+>a+agfga>gd+<da+ag&>d8
+	!4 cc+dd+fa+agfa+<cg>a+<dd+dcdd+fa+ccdd+>a+ccdd+d+f<cdd+>a+agdcdd+cda+<d+>a
+	!4 g8agfd+fgd+a+aga+afa+a
+	!4 fg1v44g2<c8>a+8g8f8g2...fg1
+	!4 r1r1r1r1r1r1r1r1
+	
+	!9 v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&
+	!9 <<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16
+	!9 <<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16
+	!9 >v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79c16<<v48d+16d+&>>v79c&v78a+16<<v79d&>>v50f+16<<v48c&d+&>>v79e&
+	!9 c&v22f+&<<<v50a16>v48d+&>>v79c16<<v48d+&>>v79e&c&v78f+16<<v79d16
+	!9 v48c&d+&>>v79c16<<v48d+16d+16v79d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&
+	!9 >>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&
+	!9 <<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16
+	!9 <<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16
+	!9 >v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16
+	!9 d+&>>v79c16<<d16
+	!9 v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&
+	!9 <<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16
+	!9 <<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&c&<<<v50a16>v48d+16d+&>>v79c&
+	!9 a+16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16
+	!9 >v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79e&c&<<<v50a16>v48d+16d+&>>v79c&a+16<<d16v48c&d+&>>v79c16<<v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79c16<<v48d+16d+&>>v79c16<<d&>>c16<<v48c&d+&>>v79e&<<<v50a16>v48d+16
+	!9 d+&>>v79c&a+16<<d16
+	!9 v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&
+	!9 <<<v50a16>v48d+16d+&>>v79c&a+16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16
+	!9 <<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16
+	!9 >v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c&a+16<<d16v48c&d+&>>v79c16<<v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79e&c&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79c16<<v48d+16d+&>>v79c&e&v78a+16<<v79d&>>v50f+16<<v48c&d+&>>v79e&
+	!9 v22f+&<<<v50a16>v48d+16d+&>>v79c&e&v78f+16<<v79d16
+	!9 v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&
+	!9 <<<v50a16>v48d+16d+&>>v79c&a+16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16
+	!9 <<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&c&<<<v50a16>v48d+16d+&>>v79c&
+	!9 a+&e16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16
+	!9 >v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c&e16<<d16v48c&
+	!9 d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c&e&a+16<<d16v48c&d+&>>v79c16<<v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79c16<<v48d+16d+&>>v79c&e16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16
+	!9 d+&>>v79c&e&<d+16<d16
+	!9 v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&
+	!9 <<<v50a16>v48d+16d+&>>v79c&a+16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16
+	!9 <<v48d+&>>v79c16<<v48d+&>>v79c16<<d16v48c&d+&>>v79e&c&<<<v50a16>v48d+16
+	!9 d+&>>v79c&a+16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&
+	!9 >>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+&>>v79c16
+	!9 <<v48d+&>>v79c16<<d16v48c&d+&>>v79e&c&<<<v50a16>v48d+16d+&>>v79c&a+16
+	!9 <<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16
+	!9 >v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c&e16<<d16v48c&
+	!9 d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c&e&a+16<<d16
+	!9 v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&
+	!9 <<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16
+	!9 <<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16
+	!9 <<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16
+	!9 >v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&d+&>>v79c16<<v48d+16
+	!9 d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16d+&>>v79c16<<d16v48c&
+	!9 d+&>>v79c16<<v48d+16d+&>>v79c16<<d16v48c&d+&>>v79e&<<<v50a16>v48d+16
+	!9 d+&>>v79c16<<d16
+}
+{loop}{loop}

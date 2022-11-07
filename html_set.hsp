@@ -1,0 +1,644 @@
+;*******************************************************************************
+; ワﾟイル名  : html_set.hsp
+; 更新年月日 : 平29/09/23
+; 作成者     : Taker32X
+; 作成年月日 : 平29/09/12
+; 機能       : help.htm を構成する。
+;*******************************************************************************
+
+;------------------------------------ TODO ------------------------------------
+;
+; 1. ヘルプの實裝。
+;
+;------------------------------------------------------------------------------
+
+#include "hsp3utf.as
+
+#define global BRACKET_A (StrF("%%c%%c",$C2,$AB))
+#define global BRACKET_B (StrF("%%c%%c",$C2,$BB))
+
+#module
+
+#uselib "user32
+#func SetWindowPos "SetWindowPos" sptr,sptr,sptr,sptr,sptr,sptr,sptr
+#cfunc GetWindowLong "GetWindowLongA" int,int
+#func SetWindowLong "SetWindowLongA" int,int,int
+#cfunc GetSystemMenu "GetSystemMenu" int,nullptr
+#func DeleteMenu "DeleteMenu" int,int,nullptr
+#func EnableWindow "EnableWindow" int,int
+
+#deffunc WinDialog int p1,int p2,int p3,int p4
+	Screen p1,p2,p3,SCREEN_HIDE or SCREEN_FIXEDSIZE
+	SetWindowLong hwnd,-16,GetWindowLong(hwnd,-16)and$70000^GetWindowLong(hwnd,-16)
+	SetWindowLong hwnd,-8,p4
+	SetWindowPos hwnd,0,0,0,0,0,39
+	DeleteMenu GetSystemMenu(hwnd),$f000
+	DeleteMenu GetSystemMenu(hwnd),$f020
+	DeleteMenu GetSystemMenu(hwnd),$f030
+	DeleteMenu GetSystemMenu(hwnd),$f120
+	Return
+
+#deffunc ViewDialog int p1,int p2
+	gSel p2
+	EnableWindow hWnd,0
+	gsel p1,1
+	return
+
+#deffunc HideDialog int p1,int p2
+	gSel p1,-1
+	gSel p2
+	EnableWindow hWnd,1
+	Return
+
+#deffunc DelArray array p1,int p2
+	Repeat Limit(Length(p1)-1,0)
+		work(cnt)=p1(cnt+(p2<=cnt))
+	Loop
+	Dim p1
+	Repeat Limit(Length(work)-1,0)
+		p1(cnt)=work(cnt)
+	Loop
+	Dim work
+	Return
+
+#defcfunc GetNote str p1,int p2
+	string=p1
+	NoteSel string
+		NoteGet string2,p2
+	NoteUnsel
+	Return string2
+
+#defcfunc Kuruzo
+	www="
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E2,$96,$83,$E3,$80,$93,$E2,$96,$BC,$E3,$80,$93,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$83,$0A,$E2,$96,$BC,$E2,$96,$83,$E2,$96,$85,$E2,$96,$86,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$85,$E2,$96,$83,$E2,$96,$BC,$0A,$E3,$80,$80,$E2,$96,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$88,$E2,$96,$88,$E2,$96,$88,$E2,$96,$88,$E2,$96,$80,$0A,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$20,$E2,$96,$88,$E2,$96,$80,$20,$E2,$96,$BC)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$0A,$E3,$80,$80,$20,$E2,$96,$90,$E2,$96,$83,$E2,$97,$A2,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E2,$96,$90,$0A,$E3,$80,$80,$E3,$80,$80,$20,$E2,$96,$BC,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$90,$E2,$96,$93,$E2,$96,$8C,$0A,$E3,$80,$80,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$90,$E3,$80,$93,$E2,$96,$93,$E2,$96,$8A,$0A,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$20,$E2,$96,$BC,$20,$E2,$96,$93,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$8C,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$81,$8F,$E3,$82,$8B,$E3,$81,$9E,$0A,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E2,$96,$89,$E3,$80,$80,$E2,$96,$93,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$8D,$0A,$E3,$80,$80,$E3,$80,$80,$20,$E3,$80,$80,$20,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$8A,$E3,$80,$80,$20,$E2,$96,$93,$E2,$96,$8E,$E3,$80,$80,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E3,$80,$80,$20,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$8E,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$8B,$20,$E3,$80,$80,$20,$E2,$96,$93,$E3,$80,$80,$E2,$97,$A5)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$85,$E2,$96,$84,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$8B,$E3,$80,$80,$E3,$80,$80,$20,$E3,$80,$80,$E2,$96,$83)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$97,$A4,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2,$97)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$A5,$E2,$96,$8A,$E3,$80,$80,$E3,$80,$80,$E2,$96,$93,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E2,$96,$80,$E2,$96,$87,$E2,$97,$A3,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$82,$E2,$96,$88,$E2,$96,$84,$E3,$80,$80,$E2,$96,$85,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$89,$E3,$80,$80,$E2,$96,$82,$E2,$96,$93,$E2,$96,$82,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$84,$E2,$96,$83,$E2,$96,$B2,$E2,$96,$85,$20,$E2,$96,$86,$20,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$87,$20,$E2,$96,$85,$E2,$96,$B2,$0A,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E2,$97,$A5,$E2,$96,$88,$E3,$80,$93,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$93,$E2,$96,$B2,$20,$E2,$96,$82,$E2,$96,$B2,$E2,$96,$84,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$85,$E2,$96,$80,$E2,$96,$86,$E2,$96,$83,$20,$E2,$96,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$88,$E2,$96,$85,$E2,$96,$83,$E2,$96,$82,$0A,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$88,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$93,$E2,$96,$93,$20,$E2,$96,$90,$E2,$96,$80,$E2,$96,$80,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$A0,$E2,$96,$85,$E2,$96,$86,$20,$E2,$97,$A5,$E2,$96,$86,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$93,$20,$E2,$96,$BC,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$20,$E2,$96,$88,$E2,$96,$93,$E2,$96,$80,$E3,$80,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$B2,$E3,$80,$80,$E2,$96,$90,$E2,$96,$88,$E2,$96,$93,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$90,$E2,$96,$84,$E3,$80,$80,$20,$E2,$96,$88,$E2,$96,$86,$0A,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2,$97,$A2,$E2,$96,$88,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2,$97,$A2,$E2,$96,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$86,$E2,$96,$88,$E2,$96,$88,$E2,$96,$93,$E3,$80,$93,$20,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$97,$A2,$E2,$96,$88,$E2,$96,$93,$E2,$96,$8D,$0A,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E2,$96,$A0,$E2,$96,$83,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$85,$E2,$96,$80,$E3,$80,$80,$E2,$96,$BC,$E2,$96,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$88,$E2,$96,$93,$E2,$96,$86,$E2,$96,$88,$E2,$96,$BC,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$93,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2,$96,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$88,$E2,$96,$85,$E2,$97,$A4,$E2,$96,$82,$E2,$96,$B2,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E2,$96,$8C,$20,$E3,$80,$80,$E2,$96,$80,$E2,$96,$88,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$20,$E2,$96,$90,$E2,$96,$83,$E2,$96,$93,$0A,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$80,$E2,$96,$88,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$86,$E2,$96,$80,$E2,$96,$88,$20,$E3,$80,$80,$E2,$96,$8D,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$93,$E2,$96,$82,$E3,$80,$93,$20,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E2,$96,$A0,$E2,$96,$85,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$80,$E2,$97,$A2,$E2,$96,$80,$E2,$96,$84)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$88,$E3,$80,$80,$E2,$96,$B2,$E3,$80,$80,$E3,$80,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$84,$E3,$80,$93,$20,$E2,$97,$A2,$E2,$97,$A4,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E2,$96,$B2,$0A,$E3,$80,$80,$20,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$20,$E3,$80,$80,$E3,$80,$80,$20,$E2,$96,$86,$E2,$96,$88,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$80,$E2,$96,$82,$E3,$80,$93,$E3,$80,$80,$E2,$96,$83,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E2,$97,$A2,$E2,$97,$A4,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$82,$E3,$80,$80,$E2,$96,$8B,$20,$E2,$96,$B2,$0A,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2,$97,$A2,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$88,$E2,$96,$88,$E2,$96,$85,$E3,$80,$93,$E2,$96,$84,$E2,$96,$86)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$80,$E3,$80,$80,$E2,$96,$B2,$20,$E2,$94,$83,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$93,$E3,$80,$80,$E2,$96,$8C,$E2,$96,$8B,$E2,$96,$B2,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$20,$E3,$80,$80,$E3,$80,$80,$E2,$97,$A2,$E2,$97,$A3,$0A)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$BC,$E3,$80,$80,$E3,$80,$80,$E2,$96,$BC,$20,$E2,$96,$83)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$86,$E2,$96,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$8E,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$94,$83,$E3,$80,$80,$E2,$96,$B2,$20,$E2,$96,$8C,$20,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E2,$96,$85,$20,$E2,$96,$83,$E2,$96,$80,$E3,$80,$80,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E2,$97,$A5,$E2,$97,$A3,$E2,$96,$84,$0A,$E3,$80,$80,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$97,$A2,$E2,$96,$8D)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$20,$E3,$80,$93,$E2,$96,$83,$E2,$96,$A0,$E2,$96,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$20,$E3,$80,$80,$E2,$96,$8D,$E3,$80,$80,$E2,$96,$8E)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$20,$E2,$96,$83,$E2,$96,$86,$E2,$96,$80,$E2,$96,$8D,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E2,$96,$BC,$20,$E3,$80,$93,$E2,$96,$82,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$20,$E2,$96,$B2,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E2,$96,$B2,$E3,$80,$93,$E2,$96,$86,$E2,$96,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$20,$E2,$96,$B2,$E3,$80,$80,$20,$E3,$80,$80,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$8C,$E3,$80,$80,$E2,$96,$8D,$E2,$96,$80,$E2,$96,$88,$E2,$96,$84)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E2,$96,$8E,$20,$E2,$97,$A2,$E2,$97,$A4,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E2,$96,$85,$E2,$96,$83,$E2,$96,$BC,$0A)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$20,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$97,$A2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$93,$E2,$96,$86,$E2,$96,$80,$E3,$80,$80,$20,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$93,$20,$E3,$80,$80,$20,$E3,$80,$80,$E2,$96,$8B,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E2,$96,$8C,$E3,$80,$80,$20,$E2,$96,$80,$E2,$96,$88,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$20,$E2,$96,$BC,$E3,$80,$93,$E2,$96,$82,$E3,$80,$80,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$8A,$E3,$80,$80,$20,$E2,$96,$89,$0A,$E3,$80,$80,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E2,$96,$90,$E2,$96,$93,$E2,$96,$88,$20,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$20,$E2,$96,$82,$E3,$80,$93,$20,$E3,$80,$80,$20,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$20,$E2,$96,$8C,$E3,$80,$80,$20,$E2,$96,$8C,$E2,$97,$A2,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$97,$A4,$E3,$80,$80,$E2,$96,$A0,$E3,$80,$80,$E2,$96,$8A,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$93,$E2,$96,$B2,$E2,$96,$83,$E2,$96,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$0A,$E3,$80,$80,$20,$E3,$80,$80,$20,$E3,$80,$80,$E2,$97,$A5,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$93,$E2,$96,$89,$E3,$80,$80,$20,$E2,$96,$83,$E3,$80,$93,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$20,$E3,$80,$80,$E3,$80,$80,$E2,$96,$8D,$20,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$20,$E2,$96,$BC,$E3,$80,$80,$E3,$80,$80,$E2,$96,$BC,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E2,$96,$8B,$E3,$80,$80,$E3,$80,$80,$20,$E2,$96,$85,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$88,$E2,$96,$80,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$20,$E2,$96,$BC,$E2,$96,$85,$E2,$96,$93,$E3,$80,$93,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$82,$20,$E3,$80,$80,$20,$E3,$80,$80,$20,$E2,$96,$8E,$20,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$20,$E2,$94,$83,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$83,$E2,$96,$B2,$E3,$80,$80,$E2,$96,$85,$E2,$96,$88,$0A)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E3,$80,$80,$E2,$97,$A2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$88,$E2,$96,$93,$E2,$96,$93,$E3,$80,$93,$E2,$96,$84,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$20,$E2,$94,$83,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$20,$E2,$96,$8E,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$BC)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$20,$E2,$96,$90,$E2,$96,$86,$E2,$96,$88,$E2,$96,$88,$0A,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$88)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$93,$E2,$96,$93,$E3,$80,$93,$E2,$96,$83,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$20,$E3,$80,$80,$E3,$80,$80,$20,$E3,$80,$80,$20,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$8D,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$8C,$E3,$80,$80,$E2,$96,$88,$E2,$96,$88,$E2,$96,$88,$0A,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$97,$A2,$E2,$96,$88)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$93,$E2,$96,$93,$E3,$80,$93,$E2,$96,$83,$E2,$96,$82,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$20,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$84)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$8D,$20,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$8D,$E3,$80,$80,$E2,$96,$A0,$E2,$96,$80,$0A,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2,$96,$88,$E2,$96,$93)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$93,$E3,$80,$93,$E2,$96,$83,$E2,$96,$82,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$97,$A2,$E2,$97,$A4,$20,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$8C,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$8E,$20,$E2,$96,$BC,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$88,$E2,$96,$93,$E2,$96,$93)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$93,$E2,$96,$84,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$97,$A2,$E2,$96,$80,$E3,$80,$80,$20,$E2,$96,$8C,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$20,$E3,$80,$80,$20,$E2,$97,$A5,$E2,$96,$8D,$20,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$94,$83,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$20,$E2,$96,$88,$E2,$96,$93,$E2,$96,$93,$E3,$80,$93,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$82,$E3,$80,$80,$E2,$96,$85,$E2,$96,$80,$E3,$80,$80,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$20,$E2,$96,$8B,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$20,$E2,$96,$90,$E2,$96,$83,$20,$E2,$96,$8E,$0A,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$97,$A5)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$88,$E2,$96,$93,$E2,$96,$93,$E3,$80,$93,$E2,$96,$A0,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$80,$E3,$80,$80,$E3,$80,$80,$20,$E3,$80,$80,$E2,$96,$8B,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E3,$80,$80,$20,$E2,$97,$A5)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$8B,$E2,$96,$80,$E2,$96,$8D,$0A,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$20,$E3,$80,$80,$20,$E2,$96,$88,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$93,$E2,$96,$93,$E2,$96,$86,$E2,$96,$A0,$E3,$80,$93,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E2,$96,$8A,$E3,$80,$80,$E3,$80,$80,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2,$96,$8A,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$8C,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$20,$E2,$97,$A5,$E2,$96,$88,$E2,$96,$93,$E2,$96,$93)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$88,$E2,$96,$89,$E3,$80,$93,$E3,$80,$80,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E2,$96,$8A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$20,$E2,$96,$83,$E2,$96,$89,$20,$E2,$96,$B2,$0A,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$90,$E2,$96,$88,$E2,$96,$93,$E2,$96,$93,$E2,$96,$A0,$E3,$80,$93)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$89,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E2,$96,$83,$E2,$96,$86,$E2,$96,$8A,$20,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$86,$E2,$96,$A0,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E2,$97,$A2,$E2,$96,$88,$E2,$96,$88,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$93,$E2,$96,$93,$E2,$96,$89,$E3,$80,$93,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E2,$96,$89,$E3,$80,$80,$E2,$96,$84,$E2,$96,$86,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$88,$E2,$96,$88,$E2,$96,$89,$E3,$80,$80,$E2,$96,$A0,$0A,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$90,$E2,$96,$88,$E2,$96,$88,$E2,$96,$93,$E2,$96,$A0,$E3,$80,$93)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$88,$E2,$96,$86,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$88,$E2,$96,$80,$E3,$80,$80,$E2,$96,$88,$E2,$96,$80,$E3,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$E2,$96,$BC,$0A,$E3,$80,$80,$20,$E3,$80,$80,$20,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$20,$E2,$96,$88,$E2,$96,$88,$E2,$96,$88,$E2,$96,$A0)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$93,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$B2,$20)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E2,$96,$93,$E3,$80,$80,$20,$E2,$96,$BC,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E2,$96,$8C,$0A,$E3,$80,$80,$20,$E3,$80,$80,$20,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E2,$97,$A5,$E2,$96,$88,$E2,$96,$88,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$A0,$E3,$80,$93,$E3,$80,$80,$E3,$80,$80,$20,$E2,$96,$84,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$88,$E2,$96,$88,$E2,$96,$86,$E2,$96,$93,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$8D,$20,$E2,$94,$83,$20,$E2,$96,$8D,$0A,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2,$96,$90,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$88,$E2,$96,$A0,$E3,$80,$93,$20,$E2,$96,$83,$E2,$96,$86,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$88,$E2,$96,$88,$E2,$96,$88,$E2,$96,$88,$E2,$96,$93,$20,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$20,$E2,$96,$8C,$E3,$80,$80,$E2,$96,$8E,$E2,$96,$83,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$8E,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$80,$80,$20,$E2,$97,$A5,$E2,$96,$88,$E2,$96,$A0,$E3,$80,$93,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$BC,$E3,$80,$80,$E3,$80,$80,$E2,$96,$88,$E2,$96,$88,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$93,$E2,$96,$93,$E3,$80,$80,$E3,$80,$80,$E2,$96,$8B,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$8D,$E2,$96,$BC,$0A,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E2,$96,$88,$E2,$96,$A0,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$86,$E2,$96,$80,$E3,$80,$80,$20,$E3,$80,$80,$20,$E2,$96,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$88,$E2,$96,$93,$E2,$96,$93,$E3,$80,$80,$E3,$80,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$8A,$E3,$80,$80,$E2,$96,$8D,$20,$E2,$96,$8C,$0A,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$E3,$80,$80,$20,$E2,$96,$88)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$A0,$E2,$96,$80,$E3,$80,$80,$E3,$80,$80,$20,$E3,$80,$80)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$20,$E3,$80,$80,$E2,$96,$88,$E2,$96,$93,$E2,$96,$93,$E2,$96,$8E)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$80,$80,$20,$E2,$96,$8B,$E3,$80,$80,$E2,$96,$8E,$20,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$8D,$0A,$E3,$80,$80,$20,$E3,$80,$80,$20,$E3,$80,$80,$E2,$96,$85)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E2,$96,$88,$E2,$96,$80,$E2,$96,$BC,$E3,$80,$80,$E3,$80,$80,$E2)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$96,$84,$E3,$80,$93,$E2,$96,$A0,$E2,$96,$93,$E2,$96,$93,$E2,$96)
+	www+StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$8C,$20,$E3,$80,$80,$20,$E2,$96,$8C,$20,$E2,$94,$83,$E2,$96,$B2)
+	www+StrF("%c",$0A)
+	Return www
+
+#defcfunc Final
+	Switch Rnd(4)
+		Case 0
+		Case 3
+			www=StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$82,$B9,$E3,$83,$88,$E3,$83,$A9,$E3,$82,$A4,$E3,$82,$AF)
+			SwBreak
+		Case 1
+			www=StrF("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",$E3,$82,$84,$E3,$82,$89,$E3,$82,$8C,$E3,$81,$9F,$EF,$BC,$81)
+			SwBreak
+		Case 2
+			www=StrF("%c%c%c%c%c%c%c%c%c",$E3,$81,$84,$E3,$81,$A6,$E3,$83,$BC)
+			SwBreak
+	SwEnd
+	Return www
+
+#global
+
+	Randomize
+	NewCom spv,"Sapi.SpVoice"
+	OnExit GoSub *Vofari
+
+	Screen 0,640,480,2
+	Width,,(gInfo_DispX-gInfo_SizeX)/2,(gInfo_DispY-gInfo_SizeY)/2
+	mwhd=hWnd
+
+	WinDialog 1,320,120,mwhd
+	ClS 1
+	new_menu_name="
+	ObjSize 200-64,24
+	Pos (gInfo_WinX-200)/2,(gInfo_WinY-24)/2
+	Input new_menu_name
+	ObjSize 64,24
+	Pos gInfo_CX+200-64,gInfo_CY-24
+	Button GoSub "OK",*Ok
+
+	WinDialog 2,320,120,mwhd
+	ClS 1
+	ObjSize gInfo_WinX,gInfo_WinY
+	Button GoSub "Delete",*Delete_
+
+	gSel 0,1
+	ObjMode 2,0
+	Font "Takaoゴシック",16
+	data="
+	menu="
+	sDim main_data,32768
+	sDim ruby_data,32768
+	NoteSel data
+		NoteLoad "htmldata.txt
+		sDim text,32768,NoteMax/4
+		sDim ruby,32768,NoteMax/4
+		sDim link,1024,notemax/4
+		Repeat NoteMax
+			NoteGet work,Cnt
+			Switch Cnt\4
+				Case 0
+					menu+work+"\n
+					SwBreak
+				Case 1
+					text(cnt/4)=work
+					StrRep text(cnt/4),";","\n
+					StrRep text(cnt/4),"{semicoron}",";
+					NoteSel text(cnt/4)
+						Repeat Limit(notemax-14,0),14
+							NoteDel cnt
+						Loop
+					NoteUnsel
+					SwBreak
+				Case 2
+					ruby(cnt/4)=work
+					StrRep ruby(cnt/4),";","\n
+					StrRep ruby(cnt/4),"{semicoron}",";
+					NoteSel ruby(cnt/4)
+						Repeat Limit(notemax-14,0),14
+							NoteDel cnt
+						Loop
+					NoteUnsel
+					SwBreak
+				Case 3
+					link(cnt/4)=work
+					SwBreak
+			SwEnd
+		Loop
+	NoteUnsel
+	ObjSize 0.25*gInfo_WinX
+	ListBox menu_sel,0.8*gInfo_WinY-48,menu
+	Pos 0,0.8*gInfo_WinY-39
+	ObjSize 0.25*gInfo_WinX,(0.2*gInfo_WinY+15)/2
+	Button GoSub "New",*New
+	Button GoSub "Command",*Command
+	Pos 0.25*gInfo_WinX,0
+	main_data=text(menu_sel)
+	MesBox main_data,0.75*gInfo_WinX,(gInfo_WinY-24)/2,5
+	mesbox_id=stat
+	ruby_data=ruby(menu_sel)
+	MesBox ruby_data,0.75*gInfo_WinX,(gInfo_WinY-24)/2,5
+	ruby_id=stat
+	Pos 0
+	ObjSize gInfo_WinX,24
+	Button GoSub "Save",*Save
+	ObjSel mesbox_id
+
+*Main
+	Repeat
+		If gInfo_Act==0{
+			If menu_sel_!=menu_sel{
+				If menu_sel!=-1{
+					text(menu_sel_)=main_data
+					ruby(menu_sel_)=ruby_data
+					ObjPrm mesbox_id,text(menu_sel)
+					ObjPrm ruby_id,ruby(menu_sel)
+					ObjSel mesbox_id
+				}
+			}
+			If menu_sel!=-1{
+				menu_sel_=menu_sel
+			}
+		}
+		Wait 5
+	Loop
+	Stop
+
+*Save
+	Dialog "保存を許可するか。",2
+	If stat==6{
+		text(menu_sel)=main_data
+		ruby(menu_sel)=ruby_data
+		data="
+		ForEach text
+			text2(cnt)=text(cnt)
+			ruby2(cnt)=ruby(cnt)
+		Loop
+		NoteSel menu
+			ForEach text2
+				NoteGet work,Cnt
+				StrRep text2(Cnt),";","{semicoron}
+				StrRep text2(Cnt),"\n",";
+				StrRep ruby2(Cnt),";","{semicoron}
+				StrRep ruby2(Cnt),"\n",";
+				data+work+"\n
+				data+text2(Cnt)+"\n
+				data+ruby2(Cnt)+"\n
+				data+link(cnt)+"\n
+			Loop
+		NoteUnsel
+		NoteSel data
+			NoteSave "htmldata.txt
+		NoteUnsel
+		html={"
+			<html>
+			\t<head>
+			\t\t<meta http-equiv="Content-Type" content="text/html;" charset="UTF-8">
+			\t\t<title>ХIME のヘルプ</title>
+			\t</head>
+			\t<body bgcolor="#f0f0f0">
+			\t\t<div style="text-align: left;">
+			\t\t\t<p style="padding-left: 30px; line-height: 2.4;" align="left"><span style="font-size: 24pt;"><ruby>ХIME<rt>ヒメ</rt></ruby> <ruby>Is<rt>イズ</rt></ruby> <ruby>Music<rt>ミュジック</rt></ruby> <ruby>Environment<rt>インワﾞイロメント</rt></ruby>!! のヘルプ</span></p>
+			\t\t\t<table border="1" width="294" height="92">
+			\t\t\t\t<tbody>
+			\t\t\t\t\t<tr>
+			\t\t\t\t\t\t<td>
+			\t\t\t\t\t\t\t<p style="padding-left: 30px;"><span style="font-size: 10pt;">
+			\t\t\t\t\t\t\t\t<br><ruby><rb>目</rb><rp>(</rp><rt>もく</rt><rp>)</rp><rb>次</rb><rp>(</rp><rt>じ</rt><rp>)</rp></ruby>
+			\t\t\t\t\t\t\t</span></p>
+			\t\t\t\t\t\t\t<ol>
+		"}
+		NoteSel menu
+			Repeat NoteMax
+				html+"\t\t\t\t\t\t\t\t<li><span style=\"font-size: 10pt;\"><a href=\"#"+(cnt+1)+"\" style=\"text-decoration:none;\"><ruby>\n
+				html+"\t\t\t\t\t\t\t\t\t"
+				work=GetNote(menu,cnt)
+				Split work,";",work,work2
+				GoSub *htmlMake
+				html+"\n
+				html+"\t\t\t\t\t\t\t\t</ruby></a></span></li>\n
+			Loop
+		NoteUnsel
+		html+{"
+			\t\t\t\t\t\t\t</ol>
+			\t\t\t\t\t\t</td>
+			\t\t\t\t\t</tr>
+			\t\t\t\t</tbody>
+			\t\t\t</table><br>
+			\t\t\t<ol>
+		"}
+		NoteSel menu
+			max_note2=notemax
+		NoteUnsel
+		Repeat max_note2
+			html+"\t\t\t\t<a name=\""+(cnt+1)+"\"><li>\n
+			html+"\t\t\t\t\t<span style=\"font-size: 18pt; line-height:1.8\"><ruby>\n
+			html+"\t\t\t\t\t\t
+			work=GetNote(menu,cnt)
+			Split work,";",work,work2
+			GoSub *htmlMake
+			html+"\n
+			html+"\t\t\t\t\t</ruby></span>\n
+			NoteSel text(cnt)
+				max_note=notemax
+			NoteUnsel
+			html+"\t\t\t\t\t<p style=\"padding-left: 30; line-height:1.8\">\n
+			cnt__=cnt
+			Repeat max_note
+				If Length(text)>cnt__{
+					work=GetNote(text(cnt__),cnt)
+				}Else{
+					Break
+				}
+				If Length(ruby)>cnt__{
+					work2=GetNote(ruby(cnt__),cnt)
+				}Else{
+					Break
+				}
+				html+"\t\t\t\t\t\t<ruby>
+				GoSub *htmlMake
+				html+"</ruby><br>\n
+			Loop
+			html+"\t\t\t\t\t</p>\n
+			html+"\t\t\t\t</li></a><br>\n
+		Loop
+		html+{"
+			\t\t\t</ol>
+			\t\t</div>
+			\t</body>
+			</html>\n
+		"}
+		NoteSel html
+			NoteSave"help.htm
+		NoteUnsel
+		Dialog "保存しぬるぞ。
+	}
+	Return
+
+*Command
+	ViewDialog 2,0
+	Return
+
+*New
+	ViewDialog 1,0
+	ObjSel 0
+	Return
+
+*Vofari
+	If gInfo_Act==0{
+		If VarUse(spv){
+;			spv-> "Speak" "くるぞ",1
+		}
+		Dialog Kuruzo(),3
+		If stat==6{
+			word=Final()
+			If VarUse(spv){
+;				spv-> "Speak" word,1
+			}
+			Dialog word
+			End
+		}
+	}
+	If gInfo_Act==1{
+		new_menu_name="
+		ObjPrm 0,new_menu_name
+		HideDialog gInfo_Act,0
+	}
+	If gInfo_Act==2{
+		HideDialog gInfo_Act,0
+	}
+	Return
+
+*Ok
+	menu+new_menu_name+"\n
+	text(Length(text))="新規テキスト
+	ruby(Length(ruby))="新規ルビ
+	link(Length(link))="16,93,108,-1,186,222
+	GoSub *Vofari
+	ObjPrm 0,menu
+	Return
+
+*Delete_
+	Dialog "削除?",2
+	If stat==6{
+		NoteSel menu
+			NoteDel menu_sel
+		NoteUnsel
+		DelArray text,menu_sel
+		DelArray ruby,menu_sel
+		DelArray link,menu_sel
+		gSel 0
+		ObjPrm 0,menu
+		If menu_sel<Length(text){
+			ObjPrm mesbox_id,text(menu_sel)
+			ObjPrm ruby_id,ruby(menu_sel)
+		}Else{
+			ObjPrm mesbox_id,""
+			ObjPrm ruby_id,""
+		}
+		gSel 2
+	}
+	Return
+
+*htmlMake
+	null=0
+	char_2bytes=0
+	char_3bytes=0
+	on_byte=0
+	Repeat StrLen(work)
+		dat_byte=Peek(work,cnt)
+		If dat_byte==$00{
+			null=1
+			Break
+		}
+		If worp<=cnt{
+			If char_2bytes{
+				char_2bytes=0
+			}Else: If char_3bytes{
+				char_2bytes=1
+				char_3bytes=0
+			}Else{
+				If $20<=dat_byte&&dat_byte<=$7E||dat_byte==$09{
+					html+"<rb>"
+					If dat_byte==$20{
+						html+"&nbsp;
+					}Else{
+						html+StrF("%c",dat_byte)
+					}
+					html+"</rb><rp>(</rp><rt>
+					cnt_=cnt
+					Repeat 3
+						If on_byte+cnt>=StrLen(work2){
+							html+StrF("%c",$E3*(cnt\3==0)or$80*(cnt\3!=0))
+						}Else{
+							html+StrF("%c",Peek(work2,on_byte+cnt))
+						}
+					Loop
+					html+"</rt><rp>)</rp>
+					on_byte+3
+				}Else: If $C2<=dat_byte&&dat_byte<=$DF&&cnt<StrLen(work)-1{
+					If StrMid(work,cnt,2)==BRACKET_A{
+						filename="
+						cnt_=cnt
+						Repeat
+							If StrMid(work,cnt_+cnt+2,2)==BRACKET_B{
+								Break
+							}
+							filename+StrMid(work,cnt_+cnt+2,1)
+						Loop
+						html+"<img src=\""+filename+"\">
+						worp=cnt+StrLen(filename)+4
+						Continue
+					}
+					html+"<rb>"+StrF("%c%c",dat_byte,Peek(work,cnt+1))+"</rb><rp>(</rp><rt>
+					cnt_=cnt
+					Repeat 6
+						If on_byte+cnt>=StrLen(work2){
+							html+StrF("%c",$E3*(cnt\3==0)or$80*(cnt\3!=0))
+						}Else{
+							html+StrF("%c",Peek(work2,on_byte+cnt))
+						}
+					Loop
+					html+"</rt><rp>)</rp>
+					char_2bytes=1
+					on_byte+6
+				}Else: If $E0<=dat_byte&&dat_byte<=$EF&&cnt<StrLen(work)-2{
+					html+"<rb>"+StrF("%c%c%c",dat_byte,Peek(work,cnt+1),Peek(work,cnt+2))+"</rb><rp>(</rp><rt>
+					cnt_=cnt
+					Repeat 6
+						If on_byte+cnt>=StrLen(work2){
+							html+StrF("%c",$E3*(cnt\3==0)or$80*(cnt\3!=0))
+						}Else{
+							html+StrF("%c",Peek(work2,on_byte+cnt))
+						}
+					Loop
+					html+"</rt><rp>)</rp>
+					char_3bytes=1
+					on_byte+6
+				}
+			}
+		}
+	Loop
+	Return

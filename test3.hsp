@@ -1,0 +1,5 @@
+#include "mod_xime.as
+
+	NoteSel work:NoteLoad "misc/ketu.xim":NoteUnsel
+	mmlSet 0,work
+	mmlPlay 0
