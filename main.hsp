@@ -1,6 +1,6 @@
 ;*******************************************************************************
 ; ワﾟイル名  : main.hsp
-; 更新年月日 : 平29/10/05
+; 更新年月日 : 平29/10/09
 ; 作成者     : Taker32X
 ; 作成年月日 : 平28/10/10
 ; 機能       : 簡易エディタ、MML を書いてコンパイル+實行せられる環境
@@ -118,14 +118,21 @@
 #enum ID_HSET
 #enum ID_ABOUT
 #enum ID_TWEET
+#enum ID_TOOLBAR
 
+#pack "xime.ico
+#pack "toolbar.bmp
 #packopt hide 1
 #packopt name xime
+#packopt icon "xime.ico
+#packopt version "version_xime.txt
+#packopt upx "1
+#packopt lang "1041
 
 #module taker
 
 #uselib "user32
-#cfunc FindWindow "FindWindowA" var,int
+#cfunc FindWindow "FindWindowA" str,int
 #func GetWindowRect "GetWindowRect" int,var
 #cfunc LoadCursor "LoadCursorA" sptr,sptr
 #func SetClassLong "SetClassLongA" sptr,sptr,sptr
@@ -176,10 +183,9 @@
 *get_iroiro
 	dim AppbData,6
 	dim rc,4
-	uxoxo="Shell_TrayWnd"
-	AppbData=24,FindWindow(uxoxo,0)
+	AppbData=24,FindWindow("Shell_TrayWnd",0)
 	SHAppBarMessage 5,AppbData
-	GetWindowRect FindWindow(uxoxo,0),rc
+	GetWindowRect FindWindow("Shell_TrayWnd",0),rc
 	return
 
 #defcfunc rep_easy str p3,int p1,int p2
@@ -614,9 +620,9 @@
 
 *Command
 	Repeat link_num
-	If lparam==hLink(cnt){
-		Exec to_link(cnt),16
-	}
+		If lparam==hLink(cnt){
+			Exec to_link(cnt),16
+		}
 	Loop
 	Return
 
@@ -652,6 +658,88 @@
 			Break
 		Loop
 	}
+	Return
+
+#global
+
+#module Toolbar
+
+#uselib "comctl32
+#func InitCommonControls "InitCommonControls
+#func CreateToolbarEx "CreateToolbarEx" int,int,int,int,int,int,var,int,int,int,int,int,int
+
+#uselib "user32
+#func LoadImage "LoadImageA" int,str,int,int,int,int
+#func ShowWindow "ShowWindow" int,int
+
+#deffunc ToolInit str p1,int p2,int p3,int p4
+	size_x=p2:size_y=p3
+	tool_how=p4
+	InitCommonControls
+	LoadImage 0,p1,0,p2*p4,p3,$8010
+	hImage=stat
+	Dim tbb,5,1
+	tool_num=0
+	sep_num=0
+	Return
+
+#deffunc ToolAdd int p2,int p1
+	If p1==$800{
+		tbb(0,tool_num+sep_num)=0,0,256,0,0
+		sep_num+
+	}Else{
+		tbb(0,tool_num+sep_num)=tool_num,p2,4,0,0
+		tool_num+
+	}
+	Return
+
+#deffunc ToolApply label p1
+	CreateToolbarEx hwnd,$50000000,0,tool_how,0,hImage,tbb,tool_num+sep_num,size_x,size_y,0,0,20
+	hToolbar=stat
+	SendMsg hToolbar,$421,0,0
+	OnCmd GoSub p1,$111
+	Return
+
+#deffunc ToolHide
+	ShowWindow hToolbar,0
+	Return
+
+#deffunc ToolShow
+	ShowWindow hToolbar,5
+	Return
+
+#global
+
+#module TabControl
+
+#uselib "user32
+#func SetWindowLong "SetWindowLongA" int,int,int
+#func SetParent "SetParent" int,int
+#func GetClientRect "GetClientRect" int,var
+
+#uselib "gdi32
+#cfunc GetStockObject "GetStockObject" int
+
+#deffunc TabInit int size_x,int size_y
+	WinObj "systabcontrol32","",,$52000000,ginfo_winx-8,ginfo_winy-(size_y+12)
+	hTab=ObjInfo_hWnd(stat)
+	SendMsg hTab,$30,GetStockObject(17)
+	Return
+
+#deffunc NewTab str p1
+	string="
+	Repeat 5
+		wPoke string,2*cnt,CnvStoA(StrMid(p1,3*cnt,3))
+	Loop
+	item=1,0,0,VarPtr(string)
+	SendMsg hTab,$1307,tab_num,VarPtr(item)
+	Dim rect,4
+	GetClientRect hTab,rect
+	SendMsg hTab,$1328,,VarPtr(rect)
+	bgScr tab_num+1,rect(2)-rect(0),rect(3)-rect(1),SCREEN_HIDE,rect(0),rect(1)
+	SetWindowLong hwnd,-16,$40000000
+	SetParent hwnd,hTab
+	tab_num+
 	Return
 
 #global
@@ -724,14 +812,14 @@
 	SysColor 4
 	BoxF
 	OnError GoTo *Tomari
-	Pos 32,13
-	PicLoad "xime.ico"
+	Pos 36,24
+	PicLoad "xime.ico",1
 *Tomari
 	OnError 0
 	SysColor 7
 	Pos 81,20
 	Font "ＭＳ Ｐゴシック",12
-	Print "ХIME Is Music Environment!!\n Version 1.0
+	Print "ХIME Is Music Environment!!\n Version 1.0.2
 	Pos 75,57
 	Print "(C) 平29 Taker32X
 	Pos 48,84
@@ -743,7 +831,7 @@
 
 	gsel 0
 	onexit gosub *vofari
-;	OnError GoTo *SoftErr
+	OnError GoTo *SoftErr
 	sdim text,65536
 	sdim text_hangout,65536
 	exist INI_FILE
@@ -763,6 +851,8 @@
 	label_return=*Dummy,*Dummy,*Dummy,*Dummy,*Dummy,*page_ok,*gline_ok,*search_next,*search_next,*Dummy,*AboutEnd
 
 	screen 0,ginfo_dispx,ginfo_dispy,2
+	SysColor 4
+	BoxF
 	gosub *make_bone
 	font fontname,fontsize,fontstyle
 	objmode 2,0
@@ -774,6 +864,8 @@
 		clrobj 1,1
 	}
 	gosub *set_menu
+	GoSub *SetToolbar
+	GoSub *ShowOrHide
 
 	screen 1,ginfo_dispx,ginfo_dispy,2
 	gosub *make_bone
@@ -806,6 +898,12 @@
 		box_index=0
 	}
 	wait 0
+	Buffer 32
+
+	If playview{
+		gSel 9,1
+		Width,,view_px,view_py
+	}
 
 	repeat 2
 		gsel used_box^cnt^1,cnt
@@ -840,67 +938,15 @@
 	NewPlayView
 
 *main
-	repeat
-		if windlg==0&&(ginfo_sel==0||ginfo_sel==1){
-			if text_hangout!=text{
-				addchr=" *"
-			}else{
-				addchr=""
-			}
-			if filename==""{
-				title prgname+" - (無題)"+addchr
-			}else{
-				title prgname+" - "+getpath(filename,8)+addchr
-			}
-			gosub *set_msgline
-			if msgline!=msgline_hangout{
-				stbar_text "line : "+(msgline+1)
-			}
-			msgline_hangout=msgline
-			if (IsZoomed(mwhw(used_box))||IsIconic(mwhw(used_box)))==0{
-				winx=ginfo_sizex
-				winy=ginfo_sizey
-				winpx=ginfo_wx1
-				winpy=ginfo_wy1
-			}
-		}
-		#ifdef _DEBUG
-			If ginfo_sel!=gsel_works||ginfo_act!=active_work{
-				LogMes StrF("Select: %d, Active: %d",ginfo_sel,ginfo_act)
-				gsel_works=ginfo_sel
-				active_work=ginfo_act
-			}
-		#endif
-		If ginfo_act!=active_work&&ginfo_sel==0{
-			GoSub *Load_Set
-			GoSub *Set_Menu
-			active_work=ginfo_act
-		}
-		If blx!=(BoxLength((used_box==0)*hMesBox+(used_box==1)*hRich)==0){
-			GoSub *set_menu
-			blx=BoxLength((used_box==0)*hMesBox+(used_box==1)*hRich)==0
-		}
-		If search_dialog!=0||replace_dialog!=0{
-			gSel 7+(replace_dialog!=0)
-			If regexp@taker{
-				ObjPrm 2+(replace_dialog!=0),1
-;				ObjEnable 2+(replace_dialog!=0),0
-			}Else{
-				ObjPrm 2+(replace_dialog!=0),0
-;				ObjEnable 2+(replace_dialog!=0),1
-			}
-			gUnsel
-		}
-		wait 15	; コンピュータのバカ!!
-	loop
+	; コンピュータのバカ!!
 	stop
 
 *label
 	if ginfo_sel==0||ginfo_sel==1{
 		if ginfo_sel==0{
 			SetWindowPos hMesbox,0,0,0,lparam and$FFFF,(lparam>>16)and$FFFF,0
-			winsize=ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,0,0
-			resizeobj 0,winsize,1
+			winsize=ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status-28*toolbar,0,28*toolbar
+			resizeobj 0,winsize,0
 		}else{
 			MoveWindow hRich,0,0,ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,1
 		}
@@ -926,6 +972,7 @@
 					gosub *chg_font
 				}
 			}
+			GoSub *Save_Set
 			swbreak
 		case ID_COLOUR
 			dialog,32
@@ -937,6 +984,7 @@
 			sendmsg hRich,$443,0,bcolour
 			SetFocus hRich
 			gsel used_box
+			GoSub *Save_Set
 			swbreak
 		case ID_QUIT
 			gosub *save_set
@@ -962,6 +1010,7 @@
 			NewPlayView
 			swbreak
 		case ID_NEW
+			gSel 0
 			gosub *hangout
 			if status{
 				text=""
@@ -971,6 +1020,7 @@
 				if notedit: gosub *notedit_
 				gosub *set_menu
 			}
+			gUnsel
 			swbreak
 		case ID_LOAD
 			gosub *load
@@ -1036,7 +1086,6 @@
 					NoteSel text
 						NoteSave work_file+".txt
 					NoteUnsel
-;					Exec2 dir_exe+"\\srtxtprn.exe",work_file+".txt
 					Dim supi,17
 					Dim proc,4
 					supi(11)=1,5
@@ -1065,6 +1114,7 @@
 			swbreak
 		case ID_MESBOX
 			gosub *make_mesbox
+			GoSub *Save_Set
 			swbreak
 		case ID_DEL
 			sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$303
@@ -1091,9 +1141,11 @@
 				}
 				gosub *set_menu
 			loop
+			GoSub *Save_Set
 			swbreak
 		case ID_INDENT
 			auto_indent^1
+			GoSub *Save_Set
 			gosub *set_menu
 			swbreak
 		case ID_FORMAT
@@ -1168,8 +1220,10 @@
 			swbreak
 		Case ID_PLAYVIEW
 			playview^1
+			GoSub *Save_Set
 			GoSub *set_menu
 			gSel 9,playview*2-1
+			Width,,view_px,view_py
 			gUnsel
 			SwBreak
 		Case ID_HSET
@@ -1182,6 +1236,13 @@
 			SwBreak
 		Case ID_TWEET
 			Exec "https://twitter.com/intent/tweet?text=@Taker32X%20",16
+			SwBreak
+		Case ID_TOOLBAR
+			toolbar^1
+			GoSub *Save_Set
+			GoSub *set_menu
+			GoSub *label
+			GoSub *ShowOrHide
 			SwBreak
 		Default
 			SwBreak
@@ -1233,8 +1294,9 @@
 		addmenu menu_search,rep_easy("&B/前を檢索\tSHIFT+f･3",kanzi,kana),ID_SBACK
 		addmenu menu_search,"&R/文字列の置換...\tCTRL+R",ID_REPLACE,(search_dialog!=0||replace_dialog!=0)*3
 	addmenu the_menu,"&V/表示",menu_view,$10
-		addmenu menu_view,"&W/右端で折り返す",ID_MESBOX,(used_box==0)*cuck_mbox*8+(used_box==1)*3
+		AddMenu menu_view,"&Toolbar",ID_TOOLBAR,toolbar*8
 		addmenu menu_view,"&S/ステイタス・バァ",ID_STATUS,in_status*8
+;		addmenu menu_view,"&W/右端で折り返す",ID_MESBOX,(used_box==0)*cuck_mbox*8+(used_box==1)*3
 		AddMenu menu_view,"",,$800
 		addmenu menu_view,rep_easy("&P/再生畫面",kanzi,kana),ID_PLAYVIEW,playview*8
 	addmenu the_menu,"&XIME",menu_xime,$10
@@ -1244,8 +1306,8 @@
 		AddMenu menu_xime,"",,$800
 		addmenu menu_xime,"&S/停止\tESC",ID_STOP
 	addmenu the_menu,"&T/道具",menu_tool,$10
-		addmenu menu_tool,rep_easy("&I/ MIDI File から取り込む... [未實裝]",kanzi,kana),ID_INMIDI,3
-		addmenu menu_tool,"&O/ MIDI File に出力...\tCTRL+f･9",ID_MIDI
+;		addmenu menu_tool,rep_easy("&I/ MIDI File から取り込む... [未實裝]",kanzi,kana),ID_INMIDI,3
+		addmenu menu_tool,"&O/ MIDI File を出力...\tCTRL+f･9",ID_MIDI
 	addmenu the_menu,"&O/オプション",menu_set,$10
 		addmenu menu_set,"&Font...",ID_FONT
 ;		addmenu menu_set,rep_easy("&B/背景色... [未實裝]",kanzi,kana),ID_COLOUR,3
@@ -1541,13 +1603,17 @@
 	writeset "window","sizey",winy
 	writeset "window","posx",winpx
 	writeset "window","posy",winpy
+	WriteSet "window","view",playview
+	WriteSet "window","view_px",view_px
+	WriteSet "window","view_py",view_py
 	writeset "font","name",fontname,str
 	writeset "font","size",fontsize
 	writeset "font","style",fontstyle
+	WriteSet "object","toolbar",toolbar
 	writeset "object","stbar",in_status
-	writeset "object","return",cuck_mbox
+;	writeset "object","return",cuck_mbox
 	writeset "object","indent",auto_indent
-	writeset "object","rich",used_box
+;	writeset "object","rich",used_box
 	writeset "string","zitai",kanzi
 	writeset "string","kana",kana
 	return
@@ -1557,13 +1623,17 @@
 	readset "window","sizey",winy,10
 	readset "window","posx",winpx,10
 	readset "window","posy",winpy,10
+	ReadSet "window","view",playview,2
+	ReadSet "window","view_px",view_px,10
+	ReadSet "window","view_py",view_py,10
 	readset "font","name",fontname,100,str
 	readset "font","size",fontsize,6
 	readset "font","style",fontstyle,3
+	ReadSet "object","toolbar",toolbar,2
 	readset "object","stbar",in_status,2
-	readset "object","return",cuck_mbox,2
+;	readset "object","return",cuck_mbox,2
 	readset "object","indent",auto_indent,2
-	readset "object","rich",used_box,2
+;	readset "object","rich",used_box,2
 	readset "string","zitai",kanzi,2
 	readset "string","kana",kana,2
 	if winpx>=ginfo_dispx{
@@ -1573,6 +1643,14 @@
 		let_int winpy
 	}else{
 		winpy=(ginfo_dispy-winy)/2
+	}
+	if view_px>=ginfo_dispx{
+		view_px=winpx+48
+	}
+	if ginfo_dispy>view_py{
+		let_int view_py
+	}else{
+		view_py=winpy+64
 	}
 	return
 
@@ -2183,7 +2261,7 @@
 	return
 
 *make_bone
-	prgname="ХIME Editor
+	prgname="ХIME Macro Editor
 	width winx-(ginfo_sizex-ginfo_winx),winy-(ginfo_sizey-ginfo_winy),winpx,winpy
 	SetWindowLong hwnd,-16,GetWindowLong(hwnd,-16)or$10000 or$40000
 	return
@@ -2248,6 +2326,7 @@
 *search
 	search_dialog=1
 	GoSub *set_menu
+	GoSub *ShowOrHide
 	gsel 7,1
 	SearchUpdate 0
 	width,,winpx+80,winpy+64
@@ -2261,9 +2340,10 @@
 
 *search_end
 	search_dialog=0
-	GoSub *set_menu
 	gsel 7,-1
 	gsel used_box,1
+	GoSub *set_menu
+	GoSub *ShowOrHide
 	if used_box==0{
 		objsel 0
 	}
@@ -2274,9 +2354,13 @@
 	winy=480+(ginfo_sizey-ginfo_winy)
 	winpx=(ginfo_dispx-winx)/2
 	winpy=(ginfo_dispy-winy)/2
+	playview=0
+	view_px=winpx+48
+	view_py=winpy+64
 	fontname="FixedSys
 	fontsize=19
 	fontstyle=0
+	toolbar=0
 	in_status=1
 	cuck_mbox=0
 	auto_indent=1
@@ -2288,6 +2372,7 @@
 *replace_
 	replace_dialog=1
 	GoSub *set_menu
+	GoSub *ShowOrHide
 	gsel 8,1
 	SearchUpdate 1
 	width,,winpx+80,winpy+64
@@ -2305,9 +2390,10 @@
 
 *replace_end
 	replace_dialog=0
-	GoSub *set_menu
 	gsel 8,-1
 	gunsel 1
+	GoSub *set_menu
+	GoSub *ShowOrHide
 	if used_box==0{
 		objsel 0
 	}
@@ -2417,8 +2503,60 @@
 	Return
 
 *WindowTimer
+	if windlg==0&&(ginfo_sel==0||ginfo_sel==1){
+		if text_hangout!=text{
+			addchr=" *"
+		}else{
+			addchr=""
+		}
+		if filename==""{
+			title prgname+" - (無題)"+addchr
+		}else{
+			title prgname+" - "+getpath(filename,8)+addchr
+		}
+		gosub *set_msgline
+		if msgline!=msgline_hangout{
+			stbar_text "line : "+(msgline+1)
+		}
+		msgline_hangout=msgline
+		if (IsZoomed(mwhw(used_box))||IsIconic(mwhw(used_box)))==0{
+			winx=ginfo_sizex
+			winy=ginfo_sizey
+			winpx=ginfo_wx1
+			winpy=ginfo_wy1
+		}
+	}
+	#ifdef _DEBUG
+		If ginfo_sel!=gsel_works||ginfo_act!=active_work{
+			LogMes StrF("Select: %d, Active: %d",ginfo_sel,ginfo_act)
+			gsel_works=ginfo_sel
+			active_work=ginfo_act
+		}
+	#endif
+	If ginfo_act!=active_work&&ginfo_sel==0{
+		GoSub *Load_Set
+		GoSub *Set_Menu
+		active_work=ginfo_act
+	}
+	If blx!=(BoxLength((used_box==0)*hMesBox+(used_box==1)*hRich)==0)&&ginfo_sel==0{
+		GoSub *set_menu
+		blx=BoxLength((used_box==0)*hMesBox+(used_box==1)*hRich)==0
+	}
+	If search_dialog!=0||replace_dialog!=0{
+		gSel 7+(replace_dialog!=0)
+		If regexp@taker{
+			ObjPrm 2+(replace_dialog!=0),1
+;			ObjEnable 2+(replace_dialog!=0),0
+		}Else{
+			ObjPrm 2+(replace_dialog!=0),0
+;			ObjEnable 2+(replace_dialog!=0),1
+		}
+		gUnsel
+	}
 	If playview{
 		gSel 9
+		view_px=ginfo_wx1
+		view_py=ginfo_wy1
 		ReDraw 0
 		Color 0,0,0
 		BoxF
@@ -2517,17 +2655,56 @@
 	}
 	Return
 
+*SetToolbar
+	bmp_name="toolbar
+	#ifndef _DEBUG
+		Repeat
+			Exist dir_cur+"\\"+bmp_name+".bmp
+			If strsize==-1{
+				Buffer 32
+				PicLoad "toolbar.bmp
+				bmpSave bmp_name+".bmp
+				gSel 0
+				Break
+			}Else{
+				bmp_name+
+			}
+		Loop
+	#endif
+	ToolInit bmp_name+".bmp",16,16,7
+	#ifndef _DEBUG
+		Delete bmp_name+".bmp
+	#endif
+	ToolAdd ID_NEW
+	ToolAdd ID_LOAD
+	ToolAdd ID_SAVE
+	ToolAdd ,$800
+	ToolAdd ID_UNDO
+	ToolAdd ID_SEARCH
+	ToolAdd ,$800
+	ToolAdd ID_PLAY
+	ToolAdd ID_STOP
+	ToolApply *Command_
+	Return
+
+*ShowOrHide
+	If toolbar{
+		ToolShow
+	}Else{
+		ToolHide
+	}
+	SendMsg hToolbar@Toolbar,$401,ID_SEARCH,search_dialog==0&&replace_dialog==0
+	Return
+
 *SoftErr
-	MsgDlg "内部エラーが發生しました。\n"+StrF("Error %d",err),"エラー",2,1
-	If stat==3{
-		gSel 0
-		OnCmd 0
-		KillTimer hwnd,1
-		End
-	}Else: If stat==5{
+	If err==3{
 		Stop
 	}
-	GoTo *SoftErr
+	MsgDlg "内部エラーが發生しました。\n"+StrF("Error %d",err),"エラー",0,1
+	gSel 0
+	OnCmd 0
+	KillTimer hwnd,1
+	End
 
 *Dummy
 	Return

@@ -1,28 +1,27 @@
 ;*******************************************************************************
 ; フヮイル名 : mod_xime.as
-; 更新年月日 : 平29/09/08
+; 更新年月日 : 平29/10/08
 ; 作成者     : Taker32X
 ; 作成年月日 : 不明
 ; 機能       : コンパイルせられた中間言語を解釋し、再生する。
 ;*******************************************************************************
 
-;------------------------------------ TODO ------------------------------------
-;
-; 1. テキストデイタではなく、バイナリデイタでの動作を実装。
-;
-;------------------------------------------------------------------------------
-
 #runtime "hsp3c
 #packopt hide 1
 #packopt name mmlplay
+#packopt icon "mmlplay.ico
+#packopt version "version_play.txt
+#packopt lang "1041
+
 #define THE_TIME (gettime(7)+gettime(6)*1000+gettime(5)*60000+gettime(4)*3600000)
+
 #uselib "winmm
-#func midiOutOpen "midiOutOpen" int,int,int,int,int
+#func midiOutOpen "midiOutOpen" var,int,int,int,int
 #func midiOutShortMsg "midiOutShortMsg" int,int
 #func midiOutReset "midiOutReset" int
 #func midiOutClose "midiOutClose" int
 
-	midiOutOpen varptr(midi_handle),-1,0,0,0
+	midiOutOpen midi_handle,-1,0,0,0
 	onerror *wopari
 	run_="mmlplay
 	run__=""

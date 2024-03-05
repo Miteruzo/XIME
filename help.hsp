@@ -1,6 +1,6 @@
 ;*******************************************************************************
 ; ワﾟイル名  : help.hsp
-; 更新年月日 : 平29/10/04
+; 更新年月日 : 平29/10/07
 ; 作成者     : Taker32X
 ; 作成年月日 : 平29/05/16
 ; 機能       : xime.exe のヘルプ
@@ -52,7 +52,7 @@
 #cfunc GetPrivateProfileInt "GetPrivateProfileIntA" sptr,sptr,int,sptr
 #func WritePrivateProfileString "WritePrivateProfileStringA" sptr,sptr,sptr,sptr
 
-#uselib "gdi32"
+#uselib "gdi32
 #cfunc GetStockObject "GetStockObject" int
 
 #uselib "comctl32
@@ -68,6 +68,9 @@
 #pack "program.bmp
 #packopt name help
 #packopt hide 1
+#packopt icon "help.ico
+#packopt version "version_help.txt
+#packopt lang "1041
 
 #module mod_123
 
@@ -961,7 +964,7 @@
 	work=dir_cmdline
 	If InStr(work,0,"/s")!=-1: GoTo *Setting
 	screen 0,640,600,SCREEN_HIDE
-	title "ХIME Help Viewer Ver.0.8
+	title "ХIME Help Viewer Ver.0.8.0
 	cls 4
 	NoteSel roma_key
 		NoteLoad "roma.txt
@@ -1261,7 +1264,7 @@
 #uselib "user32
 #func SetWindowLong "SetWindowLongA" int,int,int
 #func SetParent "SetParent" int,int
-#func GetClientRect "GetClientRect" int, int
+#func GetClientRect "GetClientRect" int,var
 
 #deffunc NewTab str p1
 	string="
@@ -1271,7 +1274,7 @@
 	item=1,0,0,VarPtr(string)
 	SendMsg hTab@,$1307,tab_num,VarPtr(item)
 	Dim rect,4
-	GetClientRect hTab@,VarPtr(rect)
+	GetClientRect hTab@,rect
 	SendMsg hTab@,$1328,,VarPtr(rect)
 	bgScr tab_num+1,rect(2)-rect(0),rect(3)-rect(1),SCREEN_HIDE,rect(0),rect(1)
 	SetWindowLong hwnd,-16,$40000000
