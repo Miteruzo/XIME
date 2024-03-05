@@ -1,8 +1,8 @@
 CompanyName=Taker32X
 FileDescription=Play music written by MML
-FileVersion=1.0.1
+FileVersion=1.0.3.20
 InternalName=mmlplay
 LegalCopyright=Copyright (C) 2561 Taker32X
 OriginalFilename=mmlplay.exe
 ProductName=mmlplay.exe
-ProductVersion=1.0.1
+ProductVersion=1.0.3.20

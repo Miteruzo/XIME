@@ -1,6 +1,6 @@
 ;*******************************************************************************
 ; ワﾟイル名  : main.hsp
-; 更新年月日 : 平29/10/09
+; 更新年月日 : 平29/10/14
 ; 作成者     : Taker32X
 ; 作成年月日 : 平28/10/10
 ; 機能       : 簡易エディタ、MML を書いてコンパイル+實行せられる環境
@@ -15,6 +15,11 @@
 ;------------------------------------------------------------------------------
 
 ;#runtime "hsp3c
+
+#const MAJOR_VER 1
+#const MINOR_VER 0
+#const PATCH_VER 3
+#define VERSION_NUMBER (StrF("%%d.%%d.%%d",MAJOR_VER,MINOR_VER,PATCH_VER))
 
 #include "mod_menu.as
 #include "mod_stbar.as
@@ -481,7 +486,7 @@
 	Pos 8,48+(p1!=0)*26
 	ChkBox2 "正規表現",regexp
 	Pos 8,gInfo_CY+5
-	ChkBox2 "Escape Sequence [未実装]",escseq
+	ChkBox2 Rep_Easy("Escape Sequence [未實裝]",kanzi@,kana@),escseq
 	ObjEnable stat,0
 	Pos 8,gInfo_CY+5
 	chkbox2 rep_easy("大文字と小文字を區別する",kanzi@,kana@),distinguish@
@@ -727,10 +732,7 @@
 	Return
 
 #deffunc NewTab str p1
-	string="
-	Repeat 5
-		wPoke string,2*cnt,CnvStoA(StrMid(p1,3*cnt,3))
-	Loop
+	string=p1
 	item=1,0,0,VarPtr(string)
 	SendMsg hTab,$1307,tab_num,VarPtr(item)
 	Dim rect,4
@@ -739,10 +741,40 @@
 	bgScr tab_num+1,rect(2)-rect(0),rect(3)-rect(1),SCREEN_HIDE,rect(0),rect(1)
 	SetWindowLong hwnd,-16,$40000000
 	SetParent hwnd,hTab
+	SysColor 4
+	BoxF
+	Color 0,0,0
 	tab_num+
 	Return
 
 #global
+
+; ------------------------------------------------------------------------------
+
+#ifdef _DEBUG
+
+*Build
+	Exist "main"+VERSION_NUMBER
+	If strsize!=-1{
+		NoteSel work
+			NoteLoad "main"+VERSION_NUMBER
+		NoteUnsel
+		work=Str(Int(work)+1)
+	}Else{
+		work="1
+	}
+	NoteSel work
+		NoteSave "main"+VERSION_NUMBER
+	NoteUnsel
+	build_num=Int(work)
+
+#else
+
+	build_num=20
+
+#endif
+
+; ------------------------------------------------------------------------------
 
 	screen 1,,,SCREEN_HIDE
 	repeat 2
@@ -758,10 +790,10 @@
 	print_width=40
 	print_height=36
 	print_pts=10.5
-	print_top=20f
-	print_bottom=20f
-	print_left=20f
-	print_right=20f
+	print_top=20F
+	print_bottom=20F
+	print_left=20F
+	print_right=20F
 	print_fname=msmincho
 	print_width_=print_width
 	print_height_=print_height
@@ -819,7 +851,7 @@
 	SysColor 7
 	Pos 81,20
 	Font "ＭＳ Ｐゴシック",12
-	Print "ХIME Is Music Environment!!\n Version 1.0.2
+	Print "ХIME Is Music Environment!!\n Version "+MAJOR_VER+"."+MINOR_VER+"."+PATCH_VER+"."+build_num
 	Pos 75,57
 	Print "(C) 平29 Taker32X
 	Pos 48,84
@@ -876,7 +908,7 @@
 	richy=ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status
 	CreateWindowEx 0,"RichEdit","",$50B110C4,0,0,richx,richy,hwnd,0,hinstance,0
 	hRich=stat
-	sendmsg hRich,$435,0,$7ffffffd
+	sendmsg hRich,$435,0,$7FFFFFFD
 	MoveWindow hRich,0,0,ginfo_winx+1,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,1
 	SetWindowPos hRich,0,0,0,ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,$40
 	sendmsg hRich,$44d,4,$1000000
@@ -1070,6 +1102,7 @@
 			swbreak
 		case ID_NOTEDIT
 			gosub *notedit_
+			GoSub *Label
 			swbreak
 		case ID_PLAYONLY
 			SwitchCheck 1
@@ -1214,7 +1247,7 @@
 			gosub *screen_5
 			gosub *screen_7
 			gosub *screen_8
-			gosub *screen_9
+			gosub *Screen_9
 			gsel used_box
 			gosub *set_menu
 			swbreak
@@ -1270,7 +1303,7 @@
 		addmenu menu_file,"&S/上書き保存\tCTRL+S",ID_SAVE
 		addmenu menu_file,"&A/名前を付けて保存...\tCTRL+SHIFT+S",ID_SAVEAS
 		addmenu menu_file,"",,$800
-		addmenu menu_file,"&P/印刷...\tCTRL+P",ID_PRINT
+		addmenu menu_file,"&P/印刷...",ID_PRINT
 ;		addmenu menu_file,"&U/ Page 設定...",ID_PAGE
 		addmenu menu_file,"",,$800
 		addmenu menu_file,"&Q/終了\tGRPH+f･4",ID_QUIT
@@ -1386,7 +1419,7 @@
 				keybd_event 18,1
 				SwBreak
 			Case $200 or'P'
-				gosub *printout
+;				gosub *printout
 				SwBreak
 			Case $100 or 112
 				gosub *help
@@ -1588,6 +1621,7 @@
 				SwBreak
 			Case 9
 				playview=0
+				GoSub *Save_Set
 				GoSub *set_menu
 				gSel 9,-1
 				gUnsel
@@ -1870,6 +1904,7 @@
 	pos 0,0
 	gosub *set_mesbox
 	gosub *set_menu
+	GoSub *Label
 	return
 
 *comperr
