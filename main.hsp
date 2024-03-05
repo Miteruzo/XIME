@@ -1,6 +1,6 @@
 ;*******************************************************************************
 ; ワﾟイル名  : main.hsp
-; 更新年月日 : 平29/10/14
+; 更新年月日 : 平29/10/15
 ; 作成者     : Taker32X
 ; 作成年月日 : 平28/10/10
 ; 機能       : 簡易エディタ、MML を書いてコンパイル+實行せられる環境
@@ -14,13 +14,14 @@
 ;
 ;------------------------------------------------------------------------------
 
-;#runtime "hsp3c
-
 #const MAJOR_VER 1
 #const MINOR_VER 0
-#const PATCH_VER 3
-#define VERSION_NUMBER (StrF("%%d.%%d.%%d",MAJOR_VER,MINOR_VER,PATCH_VER))
+#const PATCH_VER 4
+#const BUILD_NUM 43
+#define PROJECT_NAME ("xime")
+#define PROJECT_FILE ("main.hsp")
 
+#addition "../mod_taker.as
 #include "mod_menu.as
 #include "mod_stbar.as
 #include "mod_fontdlg.as
@@ -126,7 +127,7 @@
 #enum ID_TOOLBAR
 
 #pack "xime.ico
-#pack "toolbar.bmp
+#pack "toolbar.png
 #packopt hide 1
 #packopt name xime
 #packopt icon "xime.ico
@@ -726,7 +727,7 @@
 #cfunc GetStockObject "GetStockObject" int
 
 #deffunc TabInit int size_x,int size_y
-	WinObj "systabcontrol32","",,$52000000,ginfo_winx-8,ginfo_winy-(size_y+12)
+	WinObj "systabcontrol32","",,$52000000,size_x,size_y
 	hTab=ObjInfo_hWnd(stat)
 	SendMsg hTab,$30,GetStockObject(17)
 	Return
@@ -747,34 +748,17 @@
 	tab_num+
 	Return
 
-#global
-
-; ------------------------------------------------------------------------------
-
-#ifdef _DEBUG
-
-*Build
-	Exist "main"+VERSION_NUMBER
-	If strsize!=-1{
-		NoteSel work
-			NoteLoad "main"+VERSION_NUMBER
-		NoteUnsel
-		work=Str(Int(work)+1)
-	}Else{
-		work="1
+*ChangeTab
+	DupPtr nmhdr,lparam,12
+	If nmhdr(0)==hTab&&nmhdr(2)==-551{
+		gSel wID+1,-1
+		SendMsg hTab,$130B
+		wID=stat
+		gSel wID+1,1
 	}
-	NoteSel work
-		NoteSave "main"+VERSION_NUMBER
-	NoteUnsel
-	build_num=Int(work)
+	Return
 
-#else
-
-	build_num=20
-
-#endif
-
-; ------------------------------------------------------------------------------
+#global
 
 	screen 1,,,SCREEN_HIDE
 	repeat 2
@@ -851,7 +835,7 @@
 	SysColor 7
 	Pos 81,20
 	Font "ＭＳ Ｐゴシック",12
-	Print "ХIME Is Music Environment!!\n Version "+MAJOR_VER+"."+MINOR_VER+"."+PATCH_VER+"."+build_num
+	Print "ХIME Is Music Environment!!\n Version "+VERSION_NUMBER
 	Pos 75,57
 	Print "(C) 平29 Taker32X
 	Pos 48,84
@@ -989,6 +973,7 @@
 *command_
 	switch wparam and$ffff
 		case ID_FONT
+			Color 0,0,0
 			fontdlg fontis
 			if stat{
 				fontname=refstr
@@ -1005,6 +990,7 @@
 				}
 			}
 			GoSub *Save_Set
+			GoSub *Label
 			swbreak
 		case ID_COLOUR
 			dialog,32
@@ -1017,6 +1003,7 @@
 			SetFocus hRich
 			gsel used_box
 			GoSub *Save_Set
+			GoSub *Label
 			swbreak
 		case ID_QUIT
 			gosub *save_set
@@ -2692,24 +2679,24 @@
 
 *SetToolbar
 	bmp_name="toolbar
-	#ifndef _DEBUG
-		Repeat
-			Exist dir_cur+"\\"+bmp_name+".bmp
-			If strsize==-1{
-				Buffer 32
-				PicLoad "toolbar.bmp
-				bmpSave bmp_name+".bmp
-				gSel 0
-				Break
-			}Else{
-				bmp_name+
-			}
-		Loop
-	#endif
+	Repeat
+		Exist dir_cur+"\\"+bmp_name+".bmp
+		If strsize==-1{
+			Buffer 32
+			PicLoad "toolbar.png"
+			SysColor 4
+			BoxF
+			Pos 0,0
+			PicLoad "toolbar.png",1
+			bmpSave bmp_name+".bmp
+			gSel 0
+			Break
+		}Else{
+			bmp_name+
+		}
+	Loop
 	ToolInit bmp_name+".bmp",16,16,7
-	#ifndef _DEBUG
-		Delete bmp_name+".bmp
-	#endif
+	Delete bmp_name+".bmp
 	ToolAdd ID_NEW
 	ToolAdd ID_LOAD
 	ToolAdd ID_SAVE
