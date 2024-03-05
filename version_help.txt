@@ -1,8 +1,8 @@
 CompanyName=Taker32X
 FileDescription=About commands of XIME
-FileVersion=0.8.0
+FileVersion=0.8.2.4
 InternalName=help
 LegalCopyright=Copyright (C) 2561 Taker32X
 OriginalFilename=help.exe
 ProductName=XIME Is Music Environment!! Help Viewer
-ProductVersion=0.8.0
+ProductVersion=0.8.2.4

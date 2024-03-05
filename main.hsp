@@ -16,8 +16,8 @@
 
 #const MAJOR_VER 1
 #const MINOR_VER 0
-#const PATCH_VER 4
-#const BUILD_NUM 43
+#const PATCH_VER 5
+#const BUILD_NUM 47
 #define PROJECT_NAME ("xime")
 #define PROJECT_FILE ("main.hsp")
 
@@ -1924,13 +1924,13 @@
 			ErrorMes "Loop のネストが深すぎます。
 			swbreak
 		case 10
-			ErrorMes rep_easy("定義濟みのマクロが有ります。",kanzi,kana)
+			ErrorMes rep_easy("定義濟みのマクロを定義しようとしてゐます。",kanzi,kana)
 			swbreak
 		case 11
-			ErrorMes "未定義のマクロが有ります。
+			ErrorMes Rep_Easy("未定義のマクロを展開しようとしてゐます。",kanzi,kana)
 			swbreak
 		Case 12
-			ErrorMes Rep_Easy("音階が範圍外が有ります。",kanzi,kana)
+			ErrorMes Rep_Easy("範圍外の音階が有ります。",kanzi,kana)
 			SwBreak
 	swend
 	objsel 0

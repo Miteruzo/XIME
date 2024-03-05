@@ -6,6 +6,35 @@
 ; 機能       : コンパイルせられた中間言語を解釋し、再生する。
 ;*******************************************************************************
 
+#const MAJOR_VER 1
+#const MINOR_VER 0
+#const PATCH_VER 5
+#define VERSION_NUMBER (StrF("%%d.%%d.%%d.%%d",MAJOR_VER,MINOR_VER,PATCH_VER,build_num))
+#define PROJECT_NAME ("xime")
+
+#ifdef _DEBUG
+
+*Build
+	Exist PROJECT_NAME+"_ver
+	If strsize!=-1{
+		NoteSel work
+			NoteLoad PROJECT_NAME+"_ver
+		NoteUnsel
+		work=Str(Int(work)+1)
+	}Else{
+		work="1
+	}
+	NoteSel work
+		NoteSave PROJECT_NAME+"_ver
+	NoteUnsel
+	build_num=Int(work)
+
+#else
+
+	build_num=47
+
+#endif
+
 #runtime "hsp3c
 #packopt hide 1
 #packopt name mmlplay
@@ -111,15 +140,15 @@
 ;			if code=="": _continue
 ;			split code,":",time,ch,no,velocity
 			time=lPeek(sheet,i*11)
-			ch=Peek(sheet,i*11+4)or$0F
+			ch=Peek(sheet,i*11+4)and$0F
 			no=Peek(sheet,i*11+5)
 			velocity=Peek(sheet,i*11+6)
-			Switch (Peek(sheet,i*11+4)or$F0)>>4
+			Switch (Peek(sheet,i*11+4)and$F0)>>4
 				Case 1
 					midiOutShortMsg midi_handle,$C0 or ch or(no<<8)
 					SwBreak
 				Case 2
-					midiOutShortMsg midi_handle,$b0 or ch or($0A<<8)or(no<<16)
+					midiOutShortMsg midi_handle,$B0 or ch or($0A<<8)or(no<<16)
 					SwBreak
 				Case 3
 /*					goto_=0+no
