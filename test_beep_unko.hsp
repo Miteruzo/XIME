@@ -1,0 +1,42 @@
+#include "kernel32.as
+
+	mml=""
+	ObjMode 2,0
+	Font MSGOTHIC,24
+	MesBox mml,640,456
+	ObjMode 1,0
+	ObjSize 640,24
+	Button GoSub "çƒê∂!",*Play
+	Stop
+
+*Play
+	octave=4
+	the_length=4
+	tempo=120
+	For i,0,StrLen(mml)
+		Switch StrMid(mml,i,1)
+			Case "c"
+				work=0
+				SwBreak
+			Case "d"
+				work=2
+				SwBreak
+			Case "e"
+				work=4
+				SwBreak
+			Case "f"
+				work=5
+				SwBreak
+			Case "g"
+				work=7
+				SwBreak
+			Case "a"
+				work=9
+				SwBreak
+			Case "b"
+				work=11
+				SwBreak
+		SwEnd
+		Beep Int(880F*PowF(2,(Double((octave+1)*12+work)-69)/12)),Int(240000F/Double(the_length)/Double(tempo))
+	Next
+	Return

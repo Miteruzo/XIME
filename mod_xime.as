@@ -60,6 +60,18 @@
 
 #endif
 
+#uselib "kernel32
+#func CreateFileMapping "CreateFileMappingA" sptr,sptr,sptr,sptr,sptr,str
+#cfunc GetLastError "GetLastError"
+#func MapViewOfFile "MapViewOfFile" sptr,sptr,sptr,sptr,sptr
+#func UnmapViewOfFile "UnmapViewOfFile" sptr
+#func CloseHandle "CloseHandle" sptr
+
+#const FILE_MAP_WRITE $02
+#const FILE_MAP_READ $04
+#const PAGE_READWRITE $04
+#const ERROR_ALREADY_EXISTS $B7
+
 #define swap(%1,%2)\
 	kari=%1:\
 	%1=%2:\
@@ -67,7 +79,7 @@
 
 #define Sort(%1,%2,%3=0) _Sort Int(%1),Int(%2),%3
 
-#define global beep(%1=0,%2=100) _beep %1,%2
+;#define global beep(%1=0,%2=100) _beep %1,%2
 #define global mmlplay(%1="0") _mmlplay ""+%1
 #define global mmlclear(%1=-1) _mmlclear %1
 #define global mmlstop(%1=0.0) _mmlstop %1
@@ -78,6 +90,9 @@
 	midiOutReset midi_handle@mod_mmlplay
 	midiOutClose midi_handle@mod_mmlplay
 	#endif
+	CloseHandle handle_exist
+	CloseHandle handle_data
+	CloseHandle handle_byte
 	return
 
 #deffunc local _Sort int p1,int p2,int p3
@@ -776,30 +791,46 @@
 		return
 	}
 	if put_byte/11{
+		Dim code,put_byte/11
+		Dim code2,put_byte/11
+		Dim code3,put_byte/11
+		Dim code4,put_byte/11
 		Repeat put_byte/11
-			code(cnt*4)=lPeek(sheet,cnt*11)
-			code(cnt*4+1)=lPeek(sheet,cnt*11+4)
-			code(cnt*4+2)=wPeek(sheet,cnt*11+8)
-			code(cnt*4+3)=Peek(sheet,cnt*11+10)
+			code(cnt)=lPeek(sheet,cnt*11)
+			code2(cnt)=lPeek(sheet,cnt*11+4)
+			code3(cnt)=wPeek(sheet,cnt*11+8)
+			code4(cnt)=Peek(sheet,cnt*11+10)
 		Loop
-		repeat put_byte/11-1
-			cnt_=cnt
-			repeat put_byte/11-cnt_-1,cnt_+1
-				if code(cnt_*4)>code(cnt*4){
-					cnt__=cnt
-					Repeat 4
-						Swap code(cnt_*4+cnt),code(cnt__*4+cnt)
-					Loop
-				}
+		#ifndef __COMPILE_HSP35__
+			repeat put_byte/11-1
+				cnt_=cnt
+				repeat put_byte/11-cnt_-1,cnt_+1
+					if code(cnt_)>code(cnt){
+						cnt__=cnt
+							Swap code(cnt_),code(cnt)
+							Swap code2(cnt_),code2(cnt)
+							Swap code3(cnt_),code3(cnt)
+							Swap code4(cnt_),code4(cnt)
+					}
+				loop
 			loop
-		loop
+		#else
+			SortVal code
+		#endif
 	}
 	sDim sheet,put_byte
 	Repeat put_byte/11
-		lPoke sheet,cnt*11,code(cnt*4)
-		lPoke sheet,cnt*11+4,code(cnt*4+1)
-		wPoke sheet,cnt*11+8,code(cnt*4+2)
-		Poke sheet,cnt*11+10,code(cnt*4+3)
+		lPoke sheet,cnt*11,code(cnt)
+		#ifndef __COMPILE_HSP35__
+			lPoke sheet,cnt*11+4,code2(cnt)
+			wPoke sheet,cnt*11+8,code3(cnt)
+			Poke sheet,cnt*11+10,code4(cnt)
+		#else
+			SortGet work_code,cnt
+			lPoke sheet,cnt*11+4,code2(work_code)
+			wPoke sheet,cnt*11+8,code3(work_code)
+			Poke sheet,cnt*11+10,code4(work_code)
+		#endif
 	Loop
 	sDim sheet_back,put_byte
 	MemCpy sheet_back,sheet,put_byte
@@ -818,8 +849,7 @@
 #else
 
 #defcfunc mmlchk
-	exist dir_exe+"\\mmlplay
-	return strsize!=-1
+	return mmlplay_exist
 
 #endif
 
@@ -830,6 +860,24 @@
 		mmllist(p1)=""
 	}
 	return
+
+#deffunc mmlInit
+	Randomize
+	code_mapping=""
+	Repeat 16
+		code_mapping+StrF("%c",Rnd('z'-'a'+1)+'a')
+	Loop
+	CreateFileMapping -1,0,PAGE_READWRITE,0,4,"mod_xime_exist_"+code_mapping
+	handle_exist=stat
+	MapViewOfFile handle_exist,FILE_MAP_WRITE,0,0,0
+	pointer_exist=stat
+	DupPtr mmlplay_exist,pointer_exist,4,VarType("int")
+	CreateFileMapping -1,0,PAGE_READWRITE,0,4,"mod_xime_byte_"+code_mapping
+	handle_byte=stat
+	MapViewOfFile handle_byte,FILE_MAP_WRITE,0,0,0
+	pointer_byte=stat
+	DupPtr mmlplay_byte,pointer_byte,4,VarType("int")
+	Return
 
 #ifndef __MMLPLAY_DUAL_RUN__
 
@@ -858,25 +906,49 @@
 	char=p1
 	so_empty=peek(char,0)>='0'&&peek(char,0)<='9'||char=="-"||char=="+"
 ;	sDim work,8
+	If already_mapped{
+		mmlStop
+		UnmapViewOfFile pointer_data
+		CloseHandle handle_data
+		Dim mmlplay_data
+		mmlInit
+		already_mapped=0
+	}
 	if so_empty{
-		bSave "xime.dat",mmllist(0+p1),mmlsize(0+p1)
+;		bSave "xime.dat",mmllist(0+p1),mmlsize(0+p1)
+		If mmlsize(0+p1){
+			mmlplay_byte=mmlsize(0+p1)
+			CreateFileMapping -1,0,PAGE_READWRITE,0,mmlsize(0+p1),"mod_xime_data_"+code_mapping
+			handle_data=stat
+			MapViewOfFile handle_data,FILE_MAP_WRITE,0,0,0
+			pointer_data=stat
+			DupPtr mmlplay_data,pointer_data,mmlsize(0+p1),VarType("str")
+			MemCpy mmlplay_data,mmllist(0+p1),mmlsize(0+p1)
+			already_mapped=1
+		}
 ;		lPoke work,0,VarPtr(mmllist(0+p1))
 ;		lPoke work,4,StrLen(mmllist(0+p1))+1
 	}else{
 		text=p1
 		gosub *compile
-		bSave "xime.dat",sheet,put_byte
+;		bSave "xime.dat",sheet,put_byte
+		If put_byte{
+			mmlplay_byte=put_byte
+			CreateFileMapping -1,0,PAGE_READWRITE,0,mmlplay_byte,"mod_xime_data_"+code_mapping
+			handle_data=stat
+			MapViewOfFile handle_data,FILE_MAP_WRITE,0,0,0
+			pointer_data=stat
+			DupPtr mmlplay_data,pointer_data,mmlplay_byte,VarType("str")
+			MemCpy mmlplay_data,sheet,put_byte
+			already_mapped=1
+		}
 ;		lPoke work,0,VarPtr(sheet)
 ;		lPoke work,4,StrLen(sheet)+1
 	}
 ;	bSave "xime.dat",work,8
-	exec dir_exe+"\\mmlplay.exe /s
-	exec dir_exe+"\\mmlplay.exe \""+dir_cur+"\\xime.dat\"
-	repeat
-		exist dir_exe+"\\mmlplay
-		if strsize!=-1: break
-	loop
-	delete "xime.dat
+	exec dir_exe+"\\mmlplay.exe /s \""+code_mapping+"\"
+	exec dir_exe+"\\mmlplay.exe \""+code_mapping+"\"
+;	delete "xime.dat
 	if so_empty{
 		return
 	}else{
@@ -920,9 +992,9 @@
 
 #deffunc _mmlstop double p1
 	if p1*1000{
-		exec dir_exe+"\\mmlplay.exe /o"+str(int(1000.0*p1))
+		exec dir_exe+"\\mmlplay.exe /o"+str(int(1000.0*p1))+" \""+code_mapping+"\"
 	}else{
-		exec dir_exe+"\\mmlplay.exe /s"
+		exec dir_exe+"\\mmlplay.exe /s \""+code_mapping+"\"
 	}
 	return
 

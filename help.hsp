@@ -16,6 +16,39 @@
 ;
 ;------------------------------------------------------------------------------
 
+#const MAJOR_VER 0
+#const MINOR_VER 8
+#const PATCH_VER 1
+#define VERSION_NUMBER (StrF("%%d.%%d.%%d.%%d",MAJOR_VER,MINOR_VER,PATCH_VER,build_num))
+#define PROJECT_NAME ("help")
+
+#ifdef _DEBUG
+
+*Build
+	Exist PROJECT_NAME+"_ver
+	If strsize!=-1{
+		NoteSel work
+			NoteLoad PROJECT_NAME+"_ver
+		NoteUnsel
+		work=Str(Int(work)+1)
+	}Else{
+		work="1
+	}
+	NoteSel work
+		NoteSave PROJECT_NAME+"_ver
+	NoteUnsel
+	build_num=Int(work)
+	NoteSel work
+		NoteLoad __FILE__
+		NoteSave "backup\\"+GetPath(__FILE__,1)+"_"+VERSION_NUMBER+GetPath(__FILE__,2)
+	NoteUnsel
+
+#else
+
+	build_num=1
+
+#endif
+
 #include "hsp3utf.as
 #include "hspext.as
 #include "llmod3/llmod3.hsp
@@ -38,11 +71,7 @@
 #define global BRACKET_A (StrF("%%c%%c",$C2,$AB))
 #define global BRACKET_B (StrF("%%c%%c",$C2,$BB))
 
-#ifdef _DEBUG
-	#define global STRFONT ("Takao明朝")
-#else
-	#define global STRFONT (MSGOTHIC)
-#endif
+#define global STRFONT (MSGOTHIC)
 
 #uselib "user32
 #cfunc GetKeyState "GetKeyState" sptr
@@ -484,13 +513,13 @@
 			}
 			SwBreak
 		Case $073	; f･4
-			ErrorMes "此機能は現在實裝してをりません。","このき　のぅ　　げんざいじっさぅ
-/*			If topping==0{
+;			ErrorMes "此機能は現在實裝してをりません。","このき　のぅ　　げんざいじっさぅ
+			If topping==0{
 				topping=1
 				searching@=1
 				input_text@="
 				inpnot_text@="
-			}*/
+			}
 			SwBreak
 		Case $075
 		Case $076

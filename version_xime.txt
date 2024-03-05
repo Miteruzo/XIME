@@ -1,8 +1,8 @@
 CompanyName=Taker32X
 FileDescription=The software which can play music using MML
-FileVersion=1.0.5.47
+FileVersion=1.0.5.44
 InternalName=xime
 LegalCopyright=Copyright (C) 2561 Taker32X
 OriginalFilename=xime.exe
 ProductName=XIME Is Music Environment!! Macro Editor
-ProductVersion=1.0.5.47
+ProductVersion=1.0.5.44

@@ -1,0 +1,214 @@
+//**********************************************//
+// MDIアプリケーションのテスト for HSP
+// Created by (c)2014-2016 InoueSoftware
+//**********************************************//
+
+#include "user32.as"
+#include "hscallbk.as"
+#include "shell32.as"
+#define GWL_WNDPROC            -4
+#define GWL_USERDATA           -21
+#define GW_CHILD               5
+#define CW_USEDEFAULT          0x80000000
+#define IDI_APPLICATION        32512
+#define IDC_ARROW              32512
+#define WS_CHILD               0x40000000
+#define WS_VISIBLE             0x10000000
+#define WS_CLIPCHILDREN        0x02000000
+#define WM_SIZE                0x0005
+#define WM_CLOSE               0x0010
+#define WM_SETTEXT             0x000C
+#define WM_GETTEXT             0x000D
+#define WM_WINDOWPOSCHANGING   0x0046
+#define WM_COMMAND             0x0111
+#define WM_MDIDESTROY          0x0221
+#define WM_MDITILE             0x0226
+#define WM_MDICASCADE          0x0227
+#define WM_MDIICONARRANGE      0x0228
+#define WM_MDIGETACTIVE        0x0229
+#define WM_MDISETMENU          0x0230
+#define MDITILE_VERTICAL       0x0000
+#define MDITILE_HORIZONTAL     0x0001
+#define MDITILE_SKIPDISABLED   0x0002
+#define MDITILE_ZORDER         0x0004
+#define MF_INSERT              0x00000000
+#define MF_POPUP               0x00000010
+#define MF_SEPARATOR           0x00000800
+
+#uselib ""
+#func _MDIWndProc "" int,int,int,int
+setcallbk MDIWndProc,_MDIWndProc,*MyMDIWndProc
+screen 0,ginfo(20),ginfo(21),0,,,640,480
+hMainWindow=hwnd
+title "MDIのテキストエディタ"
+SetWindowLong hMainWindow,-16,0x16CF0000
+SetWindowPos hMainWindow,0,0,0,0,0,0x27//再描画
+SetWindowLong hMainWindow,GWL_WNDPROC,varptr(MDIWndProc)
+OldHSPWndProc=stat
+MDIClass = "MDIChildWindowClass"
+SHFILEINFO=0
+SHGetFileInfo ".txt",0x80,varptr(SHFILEINFO),0x160,0x111//テキストファイルアイコン取得
+hIcon=SHFILEINFO.0
+LoadCursor 0,IDC_ARROW //標準矢印カーソル
+hCursor=stat
+//MDI子ウィンドウクラス登録
+dim WNDCLASSEX, 12
+WNDCLASSEX.0 = 48
+WNDCLASSEX.1 = 0
+WNDCLASSEX.2 = varptr(MDIWndProc)
+WNDCLASSEX.3 = 0
+WNDCLASSEX.4 = 0
+WNDCLASSEX.5 = hInstance
+WNDCLASSEX.6 = hIcon
+WNDCLASSEX.7 = hCursor
+WNDCLASSEX.8 = 13
+WNDCLASSEX.9 = 0
+WNDCLASSEX.10= varptr(MDIClass)
+WNDCLASSEX.11= 0
+RegisterClassEx varptr(WNDCLASSEX)
+#enum IDM_NEWWND = 100
+#enum IDM_OPEN
+#enum IDM_SAVE
+#enum IDM_CLOSEWND
+#enum IDM_CASCADE
+#enum IDM_TILE_H
+#enum IDM_TILE_V
+#enum IDM_ICONARRANGE
+CreatePopupMenu
+hMenu.2 = stat
+AppendMenu hMenu.2,MF_INSERT,IDM_NEWWND,"新しいウィンドウ(&N)"
+AppendMenu hMenu.2,MF_INSERT,IDM_CLOSEWND,"ウィンドウを閉じる(&D)"
+AppendMenu hMenu.2,MF_SEPARATOR,0,0
+AppendMenu hMenu.2,MF_INSERT,IDM_CASCADE,"重ねて表示(&C)"
+AppendMenu hMenu.2,MF_INSERT,IDM_TILE_H,"上下に並べて表示(&H)"
+AppendMenu hMenu.2,MF_INSERT,IDM_TILE_V,"左右に並べて表示(&V)"
+AppendMenu hMenu.2,MF_INSERT,IDM_ICONARRANGE,"アイコンの整列(&A)"
+
+CreatePopupMenu
+hMenu.1 = stat
+AppendMenu hMenu.1,MF_INSERT,IDM_NEWWND,"新規作成(&N)"
+AppendMenu hMenu.1,MF_INSERT,IDM_OPEN,"開く(&O)"
+AppendMenu hMenu.1,MF_INSERT,IDM_SAVE,"保存(&S)"
+CreateMenu
+hMenu.0 = stat
+AppendMenu hMenu.0,MF_POPUP,hMenu.1,"ファイル(&F)"
+AppendMenu hMenu.0,MF_POPUP,hMenu.2,"ウィンドウ(&W)"
+
+SetMenu hMainWindow, hMenu.0
+DrawMenuBar hMainWindow
+//MDIクライアントウィンドウ作成
+CLIENTCREATESTRUCT=hMenu.1,0
+CreateWindowEx 0x200,"MDICLIENT", "",WS_CHILD | WS_CLIPCHILDREN | WS_VISIBLE,0,0,ginfo(12),ginfo(13),hMainWindow,hMenu.0,hinstance,varptr(CLIENTCREATESTRUCT)
+hMDIClient=stat
+MaxMDIChild=0
+gosub *New
+stop
+*MyMDIWndProc
+	_hwnd=callbkarg(0)
+	msg=callbkarg(1)
+	wp=callbkarg(2)
+	lp=callbkarg(3)
+	if _hwnd=hMainWindow{//メインウィンドウからのメッセージ
+		switch msg
+		case WM_CLOSE
+			DestroyIcon hIcon//アイコンハンドル削除
+			PostQuitMessage hMainWindow//終了
+		swbreak
+		case WM_SIZE
+			nWidth = lp&0xFFFF
+			nHeight = (lp>>16)&0xFFFF
+			MoveWindow hMDIClient,0,0,nWidth,nHeight,1
+		swbreak
+		case WM_COMMAND
+			wID=wp&0xFFFF
+			if wID=IDM_NEWWND{//新しいウィンドウ
+				gosub *New
+				return
+			}
+			if wID=IDM_CLOSEWND{//ウィンドウを閉じる
+				sendmsg hMDIClient,WM_MDIGETACTIVE
+				if stat{
+					sendmsg hMDIClient,WM_MDIDESTROY,stat
+				}
+				return
+			}
+			if wID=IDM_ALLCLOSEWND{//全てのウィンドウを閉じる
+				sendmsg hMDIClient,WM_MDIDESTROY,-1
+				return
+			}
+			if wID=IDM_CASCADE{//重ねて表示
+				sendmsg hMDIClient,WM_MDICASCADE,0
+				return
+			}
+			if wID=IDM_TILE_H{//上下に並べる
+				sendmsg hMDIClient,WM_MDITILE,MDITILE_HORIZONTAL
+				return
+			}
+			if wID=IDM_TILE_V{//左右に並べる
+				sendmsg hMDIClient,WM_MDITILE,MDITILE_VERTICAL
+				return
+			}
+			if wID=IDM_ICONARRANGE{//アイコンの整列
+				sendmsg hMDIClient,WM_MDITILE,WM_MDIICONARRANGE
+				return
+			}
+			if wID=IDM_SAVE{//保存
+				dialog "txt",17,"テキストファイル"
+				if stat=0:return
+				fname=refstr
+				if getpath(fname,2)="":fname+=".txt"//拡張子が無かったら拡張子追加
+				sendmsg hMDIClient,WM_MDIGETACTIVE//MDIアクティブウィンドウハンドル取得
+				_hMDIChild=stat
+				if _hMDIChild{
+					GetWindow _hMDIChild,GW_CHILD:hEdit=stat
+					sdim buf,65535
+					sendmsg hEdit,WM_GETTEXT,65535,varptr(buf)//エディットボックスの内容取得
+					sendmsg _hMDIChild,WM_SETTEXT,0,varptr(fname)//MDI子ウィンドウタイトル設定
+					notesel buf
+					notesave fname
+				}
+			}
+			if wID=IDM_OPEN{//開く
+				dialog "txt",16,"テキストファイル"
+				if stat=0:return
+				fname=refstr
+				sendmsg hMDIClient,WM_MDIGETACTIVE//MDIアクティブウィンドウハンドル取得
+				_hMDIChild=stat
+				if _hMDIChild=0{//MDI子ウィンドウが無かったら作成
+					gosub *New:_hMDIChild=stat//※ ラベル *New の返り値は、作成したMDI子ウィンドウのハンドルとなる。
+				}
+				if _hMDIChild{
+					GetWindow _hMDIChild,GW_CHILD:hEdit=stat
+					sdim buf,65535
+					notesel buf
+					noteload fname
+					sendmsg hEdit,WM_SETTEXT,0,varptr(buf)//エディットボックスの内容設定
+					sendmsg _hMDIChild,WM_SETTEXT,0,varptr(fname)//MDI子ウィンドウタイトル設定
+				}
+			}
+		swend
+		DefFrameProc hMainWindow,hMDIClient,msg,wp,lp//デフォルトウィンドウメッセージ
+	}else{//MDI子ウィンドウからのメッセージ
+		if msg=WM_CLOSE{
+			dialog "閉じますか?",3
+			if stat=6:sendmsg hMDIClient,WM_MDIDESTROY,_hwnd//閉じる
+			return 0
+		}
+		DefMDIChildProc _hwnd,msg,wp,lp//デフォルトMDI子ウィンドウメッセージ
+		if msg=WM_SIZE | msg=WM_WINDOWPOSCHANGING{
+			GetWindow _hwnd,GW_CHILD:hEdit=stat
+			RECT=0,0,0,0
+			GetClientRect _hwnd,varptr(RECT)
+			MoveWindow hEdit,RECT(0),RECT(1),RECT(2)-RECT(0),RECT(3)-RECT(1),1
+		}
+	}
+return
+*New
+	MaxMDIChild++
+	CreateMDIWindow MDIClass,"新しいドキュメント"+MaxMDIChild,0,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,hMDIClient,hinstance,0
+	hMDIChild(MaxMDIChild-1)=stat
+	RECT=0,0,0,0
+	GetClientRect hMDIChild(MaxMDIChild-1),varptr(RECT)
+	CreateWindowEx 0x200,"Edit","",WS_CHILD | WS_VISIBLE | 0x300004,RECT(0),RECT(1),RECT(2)-RECT(0),RECT(3)-RECT(1),hMDIChild(MaxMDIChild-1),0,hinstance,0
+	hMDIEdit(MaxMDIChild-1)=stat
+return hMDIChild(MaxMDIChild-1)

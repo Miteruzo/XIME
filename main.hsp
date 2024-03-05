@@ -8,16 +8,18 @@
 
 ;------------------------------------ TODO ------------------------------------
 ;
-; 1. タブ・エディタ化。
+; 1. タブ・エディタ化
 ;
-; 2. エスケイプ・シクヱンスを用ゐた檢索の對應。
+; 2. エスケイプ・シクヱンスを用ゐた檢索の對應
 ;
 ;------------------------------------------------------------------------------
+
+#define global __COMPILE_HSP35__
 
 #const MAJOR_VER 1
 #const MINOR_VER 0
 #const PATCH_VER 5
-#const BUILD_NUM 47
+#const BUILD_NUM 44
 #define PROJECT_NAME ("xime")
 #define PROJECT_FILE ("main.hsp")
 
@@ -132,7 +134,7 @@
 #packopt name xime
 #packopt icon "xime.ico
 #packopt version "version_xime.txt
-#packopt upx "1
+#packopt upx 1
 #packopt lang "1041
 
 #module taker
@@ -760,6 +762,8 @@
 
 #global
 
+	mmlInit
+
 	screen 1,,,SCREEN_HIDE
 	repeat 2
 		gsel cnt
@@ -827,7 +831,7 @@
 	Title "About Application
 	SysColor 4
 	BoxF
-	OnError GoTo *Tomari
+;	OnError GoTo *Tomari
 	Pos 36,24
 	PicLoad "xime.ico",1
 *Tomari
@@ -847,7 +851,7 @@
 
 	gsel 0
 	onexit gosub *vofari
-	OnError GoTo *SoftErr
+;	OnError GoTo *SoftErr
 	sdim text,65536
 	sdim text_hangout,65536
 	exist INI_FILE
@@ -875,7 +879,7 @@
 	pos 0,0
 	gosub *set_mesbox
 	stbar_ini
-	stbar_text "Ready
+	stbar_text "Ready"
 	if in_status==0{
 		clrobj 1,1
 	}
@@ -886,8 +890,8 @@
 	screen 1,ginfo_dispx,ginfo_dispy,2
 	gosub *make_bone
 	stbar_ini
-	stbar_text "Ready
-	LoadLibrary "riched32
+	stbar_text "Ready"
+	LoadLibrary "riched32"
 	richx=ginfo_winx
 	richy=ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status
 	CreateWindowEx 0,"RichEdit","",$50B110C4,0,0,richx,richy,hwnd,0,hinstance,0
@@ -903,7 +907,7 @@
 	gosub *set_menu
 
 	screen 32,,,SCREEN_HIDE
-	work="あいうえお
+	work="あいうえお"
 	mesbox work,100
 	work=objinfo_hwnd(stat)
 	sendmsg work,$b1,0,-1
@@ -954,7 +958,7 @@
 	NewPlayView
 
 *main
-	; コンピュータのバカ!!
+	; コンピュータのばか!!
 	stop
 
 *label
@@ -1098,8 +1102,8 @@
 			SwitchCheck 2
 			swbreak
 		case ID_PRINT
-;			gosub *printout
-			work_file=dir_cur+"\\print
+			gosub *printout
+/*			work_file=dir_cur+"\\print
 			Repeat
 				Exist work_file+".txt
 				If strsize==-1{
@@ -1122,7 +1126,7 @@
 			Exist work_file+".txt
 			If strsize!=-1{
 				Delete work_file+".txt
-			}
+			}*/
 			swbreak
 		case ID_PAGE
 			gsel used_box
@@ -1291,7 +1295,7 @@
 		addmenu menu_file,"&A/名前を付けて保存...\tCTRL+SHIFT+S",ID_SAVEAS
 		addmenu menu_file,"",,$800
 		addmenu menu_file,"&P/印刷...",ID_PRINT
-;		addmenu menu_file,"&U/ Page 設定...",ID_PAGE
+		addmenu menu_file,"&U/ Page 設定...",ID_PAGE
 		addmenu menu_file,"",,$800
 		addmenu menu_file,"&Q/終了\tGRPH+f･4",ID_QUIT
 	addmenu the_menu,"&E/編輯",menu_edit,$10
@@ -1406,7 +1410,7 @@
 				keybd_event 18,1
 				SwBreak
 			Case $200 or'P'
-;				gosub *printout
+				gosub *printout
 				SwBreak
 			Case $100 or 112
 				gosub *help
@@ -1761,7 +1765,7 @@
 		poke binary_data,byte,0
 		poke binary_data,byte+1,$ff
 		poke binary_data,byte+2,$2f
-		poke binary_data,byte+3,0*/
+		poke binary_data,byte+3,0 */
 		sdim binary_data,25+VarSize(sheet)
 		scale_data='M','T','h','d',0,0,0,6,0,0,0,1,1,244,'M','T','r','k',0,0,0,0
 		byte=Length(scale_data)
@@ -1963,7 +1967,7 @@
 	sx_=limit(sx_,1):sy_=limit(sy_,1)
 	pmx_time=1.*sx/sx_
 	pmy_time=1.*sy/sy_
-	print_text=text+"\n
+	print_text=text+"\n"
 	strrep print_text,"\t","        "
 	NoteSel print_text
 		For i,0,notemax
@@ -2054,11 +2058,6 @@
 	objmode 2,1
 	pos (ginfo_winx-480)/2,16
 	print rep_easy("プリンタを選擇してください：",kanzi,kana)
-	#ifdef _DEBUG
-		pnum=1
-		useid=0
-		plist="Test
-	#endif
 	listbox useid,150,plist
 	button gosub "印刷",*go_printout
 	button gosub "印刷 Preview",*print_view
@@ -2688,7 +2687,7 @@
 			BoxF
 			Pos 0,0
 			PicLoad "toolbar.png",1
-			bmpSave bmp_name+".bmp
+			bmpSave dir_cur+"\\"+bmp_name+".bmp
 			gSel 0
 			Break
 		}Else{
@@ -2726,6 +2725,7 @@
 	gSel 0
 	OnCmd 0
 	KillTimer hwnd,1
+;	Stop
 	End
 
 *Dummy
