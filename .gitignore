@@ -1,2 +1,6 @@
 /hscl.ini
-
+/hsptmp
+/hsptmp.i
+/obj
+/packfile
+/start.ax
