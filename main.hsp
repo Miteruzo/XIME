@@ -1,50 +1,34 @@
-;*******************************************************************************
-; ワﾟイル名  : main.hsp
-; 更新年月日 : 平29/10/15
-; 作成者     : Taker32X
-; 作成年月日 : 平28/10/10
-; 機能       : 簡易エディタ、MML を書いてコンパイル+實行せられる環境
-;*******************************************************************************
-
-;------------------------------------ TODO ------------------------------------
-;
-; 1. タブ・エディタ化
-;
-; 2. エスケイプ・シクヱンスを用ゐた檢索の對應
-;
-;------------------------------------------------------------------------------
-
 #define global __COMPILE_HSP35__
 
-#const MAJOR_VER 1
-#const MINOR_VER 0
-#const PATCH_VER 5
-#const BUILD_NUM 44
-#define PROJECT_NAME ("xime")
-#define PROJECT_FILE ("main.hsp")
+#include "mod_menu.as"
+#include "mod_stbar.as"
+#include "mod_fontdlg.as"
+#include "obj.as"
+#include "mod_xime.as"
+#include "llmod3/llmod3.hsp"
+#include "llmod3/msgdlg.hsp"
+#include "llmod3/input.hsp"
+#include "hspprint.as"
+#include "mod_regexp.as"
+#include "hspext.as"
 
-#addition "../mod_taker.as
-#include "mod_menu.as
-#include "mod_stbar.as
-#include "mod_fontdlg.as
-#include "obj.as
-#include "mod_xime.as
-#include "llmod3/llmod3.hsp
-#include "llmod3/msgdlg.hsp
-#include "llmod3/input.hsp
-#include "hspprint.as
-#include "mod_regexp.as
-#include "hspext.as
+; 変数を文字列に変換
+#define LetStr(%1) \
+    %1 = Str (%1)
 
-#define let_str(%1) %1=str(%1)
-#define let_int(%1) %1=int(%1)
-#define INI_FILE (dir_exe+"\\xime.ini")
-#define ctype pt2mm(%1) (0.352778*%1)
-#define writeset(%1,%2,%3,%4=int) let_str %3:WritePrivateProfileString %1,%2,%3,INI_FILE:if "%4"=="int"{let_int %3}
-#define readset(%1,%2,%3,%4,%5=int) %3="":GetPrivateProfileString %1,%2,%3,%3,%4,INI_FILE:if "%5"=="int"{let_int %3}
+#define LetInt(%1) %1 = Int (%1)
+
+#define INI_FILE (dir_exe + "\\xime.ini")
+
+#define ctype Pt2Mm(%1) (0.352778 * %1)
+
+#define writeset(%1, %2, %3, %4=int) LetStr %3:WritePrivateProfileString %1,%2,%3,INI_FILE:if "%4"=="int"{LetInt %3}
+
+#define readset(%1, %2, %3, %4, %5=int) %3="":GetPrivateProfileString %1,%2,%3,%3,%4,INI_FILE:if "%5"=="int"{LetInt %3}
+
 #define THE_TIME (gettime(7)+gettime(6)*1000+gettime(5)*60000+gettime(4)*3600000)
 
-#uselib "user32
+#uselib "user32"
 #func SetWindowPos "SetWindowPos" sptr,sptr,sptr,sptr,sptr,sptr,sptr
 #cfunc GetWindowLong "GetWindowLongA" int,int
 #func SetWindowLong "SetWindowLongA" int,int,int
@@ -63,25 +47,25 @@
 #func KillTimer "KillTimer" sptr,sptr
 #cfunc WaitForInputIdle "WaitForInputIdle" int,int
 
-#uselib "gdi32
+#uselib "gdi32"
 #func CreateSolidBrush "CreateSolidBrush" int
 #cfunc GetDeviceCaps "GetDeviceCaps" int,int
 #cfunc CreateFontIndirect "CreateFontIndirectA" var
 #func GetObject "GetObjectA" int,int,var
 
-#uselib "kernel32
+#uselib "kernel32"
 #func GetPrivateProfileString "GetPrivateProfileStringA" sptr,sptr,sptr,var,int,sptr
 #func WritePrivateProfileString "WritePrivateProfileStringA" sptr,sptr,sptr,sptr
 #cfunc CreateProcess "CreateProcessA" int,str,int,int,int,int,int,int,var,var
 #cfunc WaitForSingleObject "WaitForSingleObject" int,int
 
-#uselib "shell32
+#uselib "shell32"
 #func DragAcceptFiles "DragAcceptFiles" int,int
 #func DragQueryFile "DragQueryFileA" int,int,var,int
 #func DragQueryPoint "DragQueryPoint" int,int
 #func DragFinish "DragFinish" int
 
-#enum ID_FONT=1
+#enum ID_FONT = 1
 #enum ID_COLOUR
 #enum ID_QUIT
 #enum ID_PLAY
@@ -128,18 +112,20 @@
 #enum ID_TWEET
 #enum ID_TOOLBAR
 
-#pack "xime.ico
-#pack "toolbar.png
+#pack "xime.ico"
+#pack "toolbar.png"
+
 #packopt hide 1
 #packopt name xime
-#packopt icon "xime.ico
-#packopt version "version_xime.txt
+#packopt icon "xime.ico"
+#packopt version "version_xime.txt"
 #packopt upx 1
-#packopt lang "1041
+#packopt lang "1041"
+
 
 #module taker
 
-#uselib "user32
+#uselib "user32"
 #cfunc FindWindow "FindWindowA" str,int
 #func GetWindowRect "GetWindowRect" int,var
 #cfunc LoadCursor "LoadCursorA" sptr,sptr
@@ -148,44 +134,58 @@
 #func InvalidateRect "InvalidateRect" sptr,sptr,sptr
 #cfunc PtInRect "PtInRect" var,sptr,sptr
 
-#uselib "shell32
+#uselib "shell32"
 #func SHAppBarMessage "SHAppBarMessage" int,var
 
-#uselib "gdi32
+#uselib "gdi32"
 #func SetTextColor "SetTextColor" sptr,sptr
 #func SetBkMode "SetBkMode" sptr,sptr
 
 #undef gsel
-#define global gsel(%1=0,%2=0) _gsel %1,%2
+#define global gsel(%1=0, %2=0) \
+    _gsel %1, %2
+
 #define global gunsel(%1=0) _gunsel %1
 
-#deffunc _gsel int p1,int p2
+#deffunc _gsel int p1, int p2
 	data=ginfo_sel
 	gsel@hsp p1,p2
+
 	return
 
 #deffunc _gunsel int p1
 	gsel@hsp data,p1
+
 	return
 
 #deffunc objint var p1,int p2
 	objprm p2,strf("%g",double(p1))
+
 	return
 
 #defcfunc pos_taskbar
 	gosub *get_iroiro
-	if rc(1)>0: tsk=0
+
+	if rc(1)>0 {
+	  tsk=0
+	}
+
 	if rc(3)<(ginfo_dispy-1): tsk=1
+
 	if rc(2)<(ginfo_dispx-1): tsk=2
+
 	if rc(0)>0: tsk=3
+
 	return tsk
 
 #defcfunc width_taskbar
 	gosub *get_iroiro
+
 	return rc(2)-rc(0)
 
 #defcfunc height_taskbar
 	gosub *get_iroiro
+
 	return rc(3)-rc(1)
 
 *get_iroiro
@@ -194,59 +194,65 @@
 	AppbData=24,FindWindow("Shell_TrayWnd",0)
 	SHAppBarMessage 5,AppbData
 	GetWindowRect FindWindow("Shell_TrayWnd",0),rc
+
 	return
 
 #defcfunc rep_easy str p3,int p1,int p2
 	sen=p3
+
 	if p2{
-		sdim seg
-		sdim esy
-		seg="しう",　"行は","行ひ","使は","遣ひ","終は","替へ","ゐ","ゑ
-		esy="しゅう","行わ","行い","使わ","遣い","終わ","替え","い","え
+		seg = "しう",　"行は","行ひ","使は","遣ひ","終は","替へ","ゐ","ゑ"
+		esy = "しゅう","行わ","行い","使わ","遣い","終わ","替え","い","え"
 		foreach seg
 			strrep sen,seg(cnt),esy(cnt)
 		loop
 	}
+
 	if p1{
-		sdim seg
-		sdim esy
-		seg="檢","橫","縱","數","參","寫","實","裝","號","變","餘","讀","擇","假","體","區","濟","畫","圍","插","點
-		esy="検","横","縦","数","参","写","実","装","号","変","余","読","択","仮","体","区","済","画","囲","挿","点
+		seg = "檢","橫","縱","數","參","寫","實","裝","號","變","餘","讀","擇","假","體","區","濟","畫","圍","插","點"
+		esy = "検","横","縦","数","参","写","実","装","号","変","余","読","択","仮","体","区","済","画","囲","挿","点"
+
 		foreach seg
 			strrep sen,seg(cnt),esy(cnt)
 		loop
 	}
+
 	return sen
 
 #defcfunc rep_large str p1,int p2
 	sen=p1
+
 	if p2{
-		sdim little
-		sdim large
-		little="ぁ","ぃ","ぅ","ぇ","ぉ","ゃ","ゅ","ょ","ゎ
-		large ="あ","い","う","え","お","や","ゆ","よ","わ
+		little = "ぁ","ぃ","ぅ","ぇ","ぉ","ゃ","ゅ","ょ","ゎ"
+		large  = "あ","い","う","え","お","や","ゆ","よ","わ"
+
 		if p2==2{
-			little(length(little))="ァ","ィ","ゥ","ェ","ォ","ヵ","ヶ","ャ","ュ","ョ","ヮ
-			large (length(large ))="ア","イ","ウ","エ","オ","カ","ケ","ヤ","ユ","ヨ","ワ
+			little(length(little))="ァ","ィ","ゥ","ェ","ォ","ヵ","ヶ","ャ","ュ","ョ","ヮ"
+			large (length(large ))="ア","イ","ウ","エ","オ","カ","ケ","ヤ","ユ","ヨ","ワ"
 		}
+
 		foreach little
 			strrep sen,little(cnt),large(cnt)
 		loop
 	}
+
 	return sen
 
 #defcfunc HowMany str p1,str p2
 	string=p1
 	split string,p2
+
 	return stat-1
 
 #deffunc prints str p1,str p2,int p3
 	workx=gInfo_CX:worky=gInfo_CY
 	font p2,p3
 	text=p1
+
 	notesel text
 		for i,0,notemax
 			noteget text_data,i
+
 			repeat 0.5+1f*strlen(text_data)/2
 				pos ginfo_winx+workx,ginfo_winy+worky
 				print strmid(text_data,cnt*2,2)
@@ -255,24 +261,29 @@
 			loop
 		next
 	noteunsel
+
 	return
 
 #deffunc Searching int p1
 	if used_box@==0{
 		search_text@=text@
 		search_keyword=keyword@
+
 		if distinguish@==0&&regexp==0{
 			repeat 26
 				strrep search_text@,strf("%c",'A'+cnt),strf("%c",'a'+cnt)
 				strrep search_keyword,strf("%c",'A'+cnt),strf("%c",'a'+cnt)
 			loop
 		}
+
 		gsel 0,1
+
 		if p1==0{
 			sendmsg hMesbox@,$B0,0,varptr(locate@)
 			locate@=strlen(strmid_index(box_index@,search_text@,0,locate@))
 			keyword_match=Match(StrMid(search_text@,locate@,StrLen(search_text@)-locate@),search_keyword,distinguish@)
 			search_pos@=instr(search_text@,locate@,IfS(regexp,keyword_match,search_keyword))
+
 			if search_pos@==-1{
 				gsel 7+replace_dialog@
 				dialog rep_easy("終はりまで檢索しました。",kanzi@,kana@)
@@ -285,19 +296,25 @@
 					gunsel
 				}
 			}
+
 			gunsel
 		}else{
 			keyword_work=""
+
 			repeat strlen(search_keyword)
 				keyword_work+strmid(search_keyword,strlen(search_keyword)-cnt-1,1)
 			loop
+
 			search_text_work=""
+
 			repeat strlen(search_text@)
 				search_text_work+strmid(search_text@,strlen(search_text@)-cnt-1,1)
 			loop
+
 			sendmsg hMesbox@,$B0,varptr(locate@)
 			locate@=strlen(strmid_index(box_index@,search_text@,0,locate@))
 			search_pos@=instr(search_text_work,strlen(search_text@)-locate@,keyword_work)
+
 			if search_pos@==-1{
 				gsel 7+replace_dialog@
 				dialog rep_easy("終はりまで檢索しました。",kanzi@,kana@)
@@ -305,36 +322,44 @@
 			}else{
 				objsel 0
 				sendmsg hMesbox@,$B1,strlen_index(box_index@,strmid(search_text@,0,locate@-search_pos@)),strlen_index(box_index@,strmid(search_text@,0,locate@-(search_pos@+strlen(IfS(regexp,keyword_match,search_keyword)))))
+
 				if search_dialog@{
 					gsel 7+replace_dialog@,1
 					gunsel
 				}
 			}
+
 			gunsel
 		}
+
 		gsel 0,1
 		objsel 0
 		gunsel
 	}
+
 	return
 
 #defcfunc box_hwnd int p1
 	if p1==0{
 		return hMesbox@
 	}
+
 	if p1==1{
 		return hRich@
 	}
+
 	return -1
 
 #deffunc ErrorMes str p1
 	dialog p1+"\n"+ifs(statement_e@modxime==""&&no@modxime=="","","--> ")+statement_e@modxime+no@modxime+" (error "+stat+" : line "+mmlerr()+")",1
+
 	return
 
 #defcfunc ifs int p1,str p2,str p3
 	if p1{
 		return p2
 	}
+
 	return p3
 
 #deffunc GroupBox str p1
@@ -345,6 +370,7 @@
 	id=stat
 	sendmsg objinfo_hwnd(id),$F4,7
 	objskip id,3
+
 	return
 
 *dummy
@@ -354,40 +380,49 @@
 	if p1{
 		Return strlen(p2)-count_full(p2)
 	}
+
 	Return strlen(p2)
 
 #defcfunc instr_index int p1,str p2,int p3,str p4
 	string=p2
+
 	if p1{
 		val=instr(string,strlen(strmid_index(1,p2,0,p3)),p4)
+
 		if val!=-1{
 			val=strlen_index(1,strmid(string,0,val))
 		}
 	}else{
 		val=instr(string,p3,p4)
 	}
+
 	return val
 
 #defcfunc strmid_index int p1,str p2,int p3,int p4
 	string=p2
+
 	if p1{
 		val2=0
 		char_full=0
 		char_return=0
+
 		repeat strlen(string)
 			dat_byte=peek(string,cnt)
+
 			if char_full{
 				char_full=0
 			}else: if char_return{
 				if dat_byte==$0A{
 					val2+2
 				}
+
 				char_return=0
 			}else{
 				if val2>=p3{
 					val2=cnt
 					break
 				}
+
 				if $20<=dat_byte&&dat_byte<=$7E||($A1<=dat_byte&&dat_byte<=$DF){
 					val2+
 				}else: if $81<=dat_byte&&dat_byte<=$9F||($E0<=dat_byte&&dat_byte<=$FC)&&cnt<strlen(string)-1{
@@ -398,9 +433,11 @@
 				}
 			}
 		loop
+
 		val3=0
 		char_full=0
 		char_return=0
+
 		repeat strlen(string)-val2+1,val2
 			dat_byte=peek(string,cnt)
 			if char_full{
@@ -425,6 +462,7 @@
 				}
 			}
 		loop
+
 		val=strmid(string,val2,val3)
 	}else{
 		val=strmid(string,p3,p4)
@@ -434,6 +472,7 @@
 #defcfunc count_full str p1
 	val=0
 	string=p1
+
 	repeat strlen(string)
 		dat_byte=peek(string,cnt)
 		if char_full{
@@ -446,14 +485,17 @@
 			}
 		}
 	loop
+
 	return val
 
 #deffunc Load2 str p1
 	Exist p1
+
 	If StrSize==-1{
 		Dialog p1+rep_easy(" の讀み込みに失敗しました。",kanzi@,kana@),1
 	}Else{
 		gosub *hangout@
+
 		if status@{
 			notesel text@
 				noteload p1
@@ -461,14 +503,18 @@
 			filename@=p1
 			text_hangout@=text@
 			objprm 0,text@
+
 			if notedit@: gosub *notedit_@
+
 			gosub *set_menu@
 		}
 	}
+
 	Return
 
 #defcfunc BoxLength int p1
 	SendMsg p1,$b0,varptr(work),varptr(work2)
+
 	Return work2-work
 
 #deffunc SearchDialog int p1
@@ -480,12 +526,14 @@
 	print rep_easy("檢索する文字列",kanzi@,kana@)
 	pos 96,6
 	input keyword@,294,24
+
 	If p1{
 		Pos 8,38
-		Print "置換後の文字列
+		Print "置換後の文字列"
 		Pos 96,32
 		Input keyword_rep@,294,24
 	}
+
 	Pos 8,48+(p1!=0)*26
 	ChkBox2 "正規表現",regexp
 	Pos 8,gInfo_CY+5
@@ -493,6 +541,7 @@
 	ObjEnable stat,0
 	Pos 8,gInfo_CY+5
 	chkbox2 rep_easy("大文字と小文字を區別する",kanzi@,kana@),distinguish@
+
 	If p1==0{
 		objsize 50
 		pos 300,55
@@ -503,10 +552,12 @@
 		sendmsg objinfo_hwnd(stat),$f4,9
 		objsize 108,70
 		pos 280,35
-		GroupBox "方向
+		GroupBox "方向"
 	}
+
 	objsize 80,24
 	pos 395,6
+
 	If p1{
 		button gosub rep_easy("次を檢索",kanzi@,kana@),*SearchNext
 		Pos gInfo_cx,gInfo_cy+5
@@ -516,8 +567,10 @@
 	}Else{
 		button gosub rep_easy("次を檢索",kanzi@,kana@),*Search_Next@
 	}
+
 	pos gInfo_cx,gInfo_cy+5
 	button gosub "キャンセル",end_label@(p1!=0)
+
 	Return
 
 *SearchNext
@@ -526,17 +579,20 @@
 		Searching 0
 		gSel used_box,1
 	}
+
 	Return
 
 *Replacing
 	Searching 0
+
 	If search_pos@!=-1{
-		work_clip="
+		work_clip=""
 		ClipGet@ work_clip,65536
 		ClipSet@ keyword_rep@
 		SendMsg hMesbox@,$302
 		ClipSet@ work_clip
 	}
+
 	Return
 
 #deffunc ChkBox2 str p1,var p2
@@ -546,6 +602,7 @@
 	ObjSize gInfo_MesX+32,gInfo_MesY
 	Pos work_x,work_y
 	ChkBox p1,p2
+
 	Return
 
 #deffunc SwitchCheck int p1
@@ -553,6 +610,7 @@
 		GoPlay
 	}Else: If p1==2{
 		GoCompile
+
 		If stat==0{
 			Dialog "コンパイルは正常に完了しました。\n(No errors, "+IfS(warning_num@modxime==0,"No",""+warning_num@modxime)+" warning"+IfS(warning_num@modxime==1,"","s")+".)"
 		}Else{
@@ -566,6 +624,7 @@
 			gosub *comperr@
 		}
 	}
+
 	Return
 
 #deffunc GoPlay
@@ -574,20 +633,23 @@
 	OnCmd 1
 	playview_start@=THE_TIME@
 	NewPlayView
+
 	Return
 
 #deffunc GoCompile
-	stbar_text "Compiling...
+	stbar_text "Compiling..."
 	OnCmd 0
 	mmlset 0,text@
 	OnCmd 1
 	work=stat
-	StBar_Text "Ready
+	StBar_Text "Ready"
+
 	Return work
 
 #deffunc NewPlayView
 	Dim playview_v@,128,16
 	Dim playview_max@
+
 	Return
 
 #deffunc SearchUpdate int p1
@@ -595,15 +657,18 @@
 	ObjPrm 1+(p1!=0),regexp
 	ObjPrm 2+(p1!=0),escseq
 	ObjPrm 3+(p1!=0),distinguish@
+
 	Return
 
 #deffunc Exec2 str p1,str p3,int p2
 	Exist p1
+
 	If strsize!=-1{
 		Exec p1+" "+p3,p2
 	}Else{
-		Dialog "\""+p1+"\" を開けません。",1,"エラー
+		Dialog "\""+p1+"\" を開けません。",1,"エラー"
 	}
+
 	Return
 
 #deffunc Hyperlink str p1,str p2,int p3,int p4
@@ -624,6 +689,7 @@
 	OnCmd GoSub *Command,$111
 	OnCmd GoSub *DrawStatic,$138
 	OnCmd GoSub *MouseOn,$20
+
 	Return
 
 *Command
@@ -632,6 +698,7 @@
 			Exec to_link(cnt),16
 		}
 	Loop
+
 	Return
 
 *DrawStatic
@@ -642,16 +709,20 @@
 			}Else{
 				SetTextColor wparam,255<<16
 			}
+
 			SetBkMode wparam,1
+
 			Break
 		}
 	Loop
+
 	Return hBrush
 
 *MouseOn
 	If (lparam and$FFFF)==1{
 		Repeat link_num
 			GetWindowRect hLink(cnt),rect
+
 			If PtInRect(rect,ginfo_mx,ginfo_my){
 				If mouse_on(cnt)==0{
 					InvalidateRect hLink(cnt),0,0
@@ -663,20 +734,23 @@
 					mouse_on(cnt)=0
 				}
 			}
+
 			Break
 		Loop
 	}
+
 	Return
 
 #global
 
+
 #module Toolbar
 
-#uselib "comctl32
-#func InitCommonControls "InitCommonControls
+#uselib "comctl32"
+#func InitCommonControls "InitCommonControls"
 #func CreateToolbarEx "CreateToolbarEx" int,int,int,int,int,int,var,int,int,int,int,int,int
 
-#uselib "user32
+#uselib "user32"
 #func LoadImage "LoadImageA" int,str,int,int,int,int
 #func ShowWindow "ShowWindow" int,int
 
@@ -689,6 +763,7 @@
 	Dim tbb,5,1
 	tool_num=0
 	sep_num=0
+
 	Return
 
 #deffunc ToolAdd int p2,int p1
@@ -699,6 +774,7 @@
 		tbb(0,tool_num+sep_num)=tool_num,p2,4,0,0
 		tool_num+
 	}
+
 	Return
 
 #deffunc ToolApply label p1
@@ -706,32 +782,37 @@
 	hToolbar=stat
 	SendMsg hToolbar,$421,0,0
 	OnCmd GoSub p1,$111
+
 	Return
 
 #deffunc ToolHide
 	ShowWindow hToolbar,0
+
 	Return
 
 #deffunc ToolShow
 	ShowWindow hToolbar,5
+
 	Return
 
 #global
 
+
 #module TabControl
 
-#uselib "user32
+#uselib "user32"
 #func SetWindowLong "SetWindowLongA" int,int,int
 #func SetParent "SetParent" int,int
 #func GetClientRect "GetClientRect" int,var
 
-#uselib "gdi32
+#uselib "gdi32"
 #cfunc GetStockObject "GetStockObject" int
 
 #deffunc TabInit int size_x,int size_y
 	WinObj "systabcontrol32","",,$52000000,size_x,size_y
 	hTab=ObjInfo_hWnd(stat)
 	SendMsg hTab,$30,GetStockObject(17)
+
 	Return
 
 #deffunc NewTab str p1
@@ -748,32 +829,38 @@
 	BoxF
 	Color 0,0,0
 	tab_num+
+
 	Return
 
 *ChangeTab
 	DupPtr nmhdr,lparam,12
+
 	If nmhdr(0)==hTab&&nmhdr(2)==-551{
 		gSel wID+1,-1
 		SendMsg hTab,$130B
 		wID=stat
 		gSel wID+1,1
 	}
+
 	Return
 
 #global
 
+
 	mmlInit
 
 	screen 1,,,SCREEN_HIDE
+
 	repeat 2
 		gsel cnt
 		mwhw(cnt)=hwnd
 	loop
+
 	end_label=*search_end,*replace_end
 
 	screen 2,512,320,6
 	gosub *win_dialog
-	title "印刷
+	title "印刷"
 	gosub *update_pinfo
 	print_width=40
 	print_height=36
@@ -802,10 +889,10 @@
 	syscolor 4
 	boxf
 	syscolor 7
-	title "指定行に移動
+	title "指定行に移動"
 	font "ＭＳ Ｐゴシック",16
 	pos 20,15
-	print "何行目に移動しますか：
+	print "何行目に移動しますか："
 	pos 53,45
 	objsize 80,24
 	input what_line
@@ -815,33 +902,31 @@
 	button gosub "OK",*gline_ok
 	pos ginfo_cx-20,ginfo_cy-20
 	font msgothic,16
-	print "行
+	print "行"
 
-	keyword="
+	keyword=""
 	search_down=1
 	gosub *screen_7
 
-	keyword_rep="
+	keyword_rep=""
 	gosub *screen_8
 
 	GoSub *Screen_9
 
 	Screen 10,278,159,SCREEN_HIDE or SCREEN_FIXEDSIZE
 	GoSub *win_dialog
-	Title "About Application
+	Title "About Application"
 	SysColor 4
 	BoxF
-;	OnError GoTo *Tomari
 	Pos 36,24
 	PicLoad "xime.ico",1
-*Tomari
 	OnError 0
 	SysColor 7
 	Pos 81,20
 	Font "ＭＳ Ｐゴシック",12
 	Print "ХIME Is Music Environment!!\n Version "+VERSION_NUMBER
 	Pos 75,57
-	Print "(C) 平29 Taker32X
+	Print "(C) 平29 Taker32X"
 	Pos 48,84
 	Print "Homepage:\n        ",1
 	Hyperlink "http://k124p.web.fc2.com/","ＭＳ Ｐゴシック",12,4
@@ -851,14 +936,15 @@
 
 	gsel 0
 	onexit gosub *vofari
-;	OnError GoTo *SoftErr
 	sdim text,65536
 	sdim text_hangout,65536
 	exist INI_FILE
 	gosub *normal_set
+
 	if strsize==-1{
 		gosub *format_set
 	}
+
 	gosub *load_set
 	GoSub *Screen_5
 	GoSub *Screen_7
@@ -880,9 +966,11 @@
 	gosub *set_mesbox
 	stbar_ini
 	stbar_text "Ready"
+
 	if in_status==0{
 		clrobj 1,1
 	}
+
 	gosub *set_menu
 	GoSub *SetToolbar
 	GoSub *ShowOrHide
@@ -901,9 +989,11 @@
 	SetWindowPos hRich,0,0,0,ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,$40
 	sendmsg hRich,$44d,4,$1000000
 	gosub *chg_font
+
 	if in_status==0{
 		clrobj 0,0
 	}
+
 	gosub *set_menu
 
 	screen 32,,,SCREEN_HIDE
@@ -912,12 +1002,15 @@
 	work=objinfo_hwnd(stat)
 	sendmsg work,$b1,0,-1
 	sendmsg work,$b0,0,varptr(work)
+
 	if work==5{
 		box_index=1
 	}else{
 		box_index=0
 	}
+
 	wait 0
+
 	Buffer 32
 
 	If playview{
@@ -930,6 +1023,7 @@
 		oncmd gosub *command_,$111
 		oncmd gosub *label,$5
 		oncmd gosub *DropFiles,$233
+
 		If cnt==0{
 			OnCmd GoSub *WindowTimer,$113
 			SetTimer hwnd,1,10,0
@@ -940,14 +1034,17 @@
 	SetFocus (used_box==0)*hMesbox or(used_box==1)*hRich
 	gsel_works=-1
 	active_work=-1
+
 	Repeat 2
 		gSel cnt
 		DragAcceptFiles hwnd,1
 		gUnsel
 	Loop
+
 	cmdline=Dir_CmdLine
 	cmdline=StrTrim(cmdline,0,' ')
 	cmdline=StrTrim(cmdline,3,'\"')
+
 	If cmdline!=""{
 		If InStr(cmdline,0,":")!=-1{
 			Load2 cmdline
@@ -955,11 +1052,11 @@
 			Load2 Dir_Cur+"\\"+cmdline
 		}
 	}
+
 	NewPlayView
 
-*main
-	; コンピュータのばか!!
 	stop
+
 
 *label
 	if ginfo_sel==0||ginfo_sel==1{
@@ -970,19 +1067,24 @@
 		}else{
 			MoveWindow hRich,0,0,ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,1
 		}
+
 		stbar_resize
 	}
+
 	return
+
 
 *command_
 	switch wparam and$ffff
 		case ID_FONT
 			Color 0,0,0
 			fontdlg fontis
+
 			if stat{
 				fontname=refstr
 				fontsize=fontis(0)
 				fontstyle=fontis(1)or fontis(6)<<2 or fontis(7)<<3
+
 				if ginfo_sel==0{
 					font fontname,fontsize,fontstyle
 					color fontis(3)or fontis(4)<<8 or fontis(5)<<16
@@ -993,191 +1095,241 @@
 					gosub *chg_font
 				}
 			}
+
 			GoSub *Save_Set
 			GoSub *Label
+
 			swbreak
+
 		case ID_COLOUR
 			dialog,32
 			bcolour=ginfo_r or ginfo_g<<8 or ginfo_b<<16
-;			gsel 0
-;			CreateSolidBrush bcolour
-;			hBrush=stat
 			gsel 1
 			sendmsg hRich,$443,0,bcolour
 			SetFocus hRich
 			gsel used_box
 			GoSub *Save_Set
 			GoSub *Label
+
 			swbreak
+
 		case ID_QUIT
 			gosub *save_set
 			gosub *hangout
+
 			if status{
 				gSel 0
 				OnCmd 0
 				KillTimer hwnd,1
 				End
 			}
+
 			swbreak
+
 		case ID_PLAY
 			SwitchCheck 0
+
 			swbreak
+
 		case ID_ALL
 			gosub *choose_all
+
 			swbreak
+
 		case ID_STOP
 			OnCmd 0
 			mmlstop
 			OnCmd 1
 			playview_start=-65536
 			NewPlayView
+
 			swbreak
+
 		case ID_NEW
 			gSel 0
 			gosub *hangout
+
 			if status{
 				text=""
 				text_hangout=text
 				objprm 0,text
 				filename=""
+
 				if notedit: gosub *notedit_
+
 				gosub *set_menu
 			}
+
 			gUnsel
+
 			swbreak
+
 		case ID_LOAD
 			gosub *load
+
 			swbreak
+
 		case ID_SAVE
 			if filename!=""{
 				overwrite=1
 			}else{
 				overwrite=0
 			}
+
 			gosub *save
+
 			swbreak
+
 		case ID_SAVEAS
 			overwrite=0
 			gosub *save
+
 			swbreak
+
 		case ID_UNDO
 			keybd_event 17,0
 			keybd_event 'Z',-1
 			keybd_event 17,1
+
 			swbreak
+
 		case ID_MOVE
 			sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$300
+
 			swbreak
+
 		case ID_COPY
 			sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$301
+
 			swbreak
+
 		case ID_PASTE
 			sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$302
+
 			swbreak
+
 		case ID_MIDI
 			gosub *out_midi
+
 			swbreak
+
 		case ID_INMIDI
 			gosub *in_midi
+
 			swbreak
+
 		case ID_RELOAD
 			if filename!=""{
 				msgdlg rep_easy("變更内容を破棄して再讀込を行ひます。よろしう御座いますか。",kanzi,kana),rep_easy("再讀込",kanzi,kana),$104,3
+
 				if stat==7: swbreak
+
 				NoteSel text
 					noteload filename
 				NoteUnsel
+
 				text_hangout=text
 				objprm 0,text
 			}
+
 			swbreak
+
 		case ID_NOTEDIT
 			gosub *notedit_
 			GoSub *Label
+
 			swbreak
+
 		case ID_PLAYONLY
 			SwitchCheck 1
+
 			swbreak
+
 		case ID_COMPILE
 			SwitchCheck 2
+
 			swbreak
+
 		case ID_PRINT
 			gosub *printout
-/*			work_file=dir_cur+"\\print
-			Repeat
-				Exist work_file+".txt
-				If strsize==-1{
-					NoteSel text
-						NoteSave work_file+".txt
-					NoteUnsel
-					Dim supi,17
-					Dim proc,4
-					supi(11)=1,5
-					ret=CreateProcess(0,dir_exe+"\\srtxtprn.exe "+work_file+".txt",0,0,0,0,0,0,supi,proc)
-					If ret{
-						ret=WaitForInputIdle(proc(0),$FFFFFFFF)
-						ret=WaitForSingleObject(proc(0),$FFFFFFFF)
-					}
-					Break
-				}Else{
-					work_file+cnt
-				}
-			Loop
-			Exist work_file+".txt
-			If strsize!=-1{
-				Delete work_file+".txt
-			}*/
+
 			swbreak
+
 		case ID_PAGE
 			gsel used_box
 			EnableWindow hwnd,0
 			gsel 5,1
+
 			swbreak
+
 		case ID_HELP
 			gosub *help
+
 			swbreak
+
 		case ID_MESBOX
 			gosub *make_mesbox
 			GoSub *Save_Set
+
 			swbreak
+
 		case ID_DEL
 			sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$303
+
 			swbreak
+
 		case ID_TOP
 			gosub *goto_top
+
 			swbreak
+
 		case ID_GOTO
 			gosub *goto_line
+
 			swbreak
+
 		case ID_BOTTOM
 			gosub *goto_bottom
+
 			swbreak
+
 		case ID_STATUS
-			in_status^1
+			in_status ^= 1
+
 			repeat 2
 				gsel used_box^(1-cnt)
 				gosub *label
+
 				if in_status{
 					stbar_ini
 					stbar_text strf("line : %d",msgline+1)
 				}else{
 					clrobj ginfo_sel^1,ginfo_sel^1
 				}
+
 				gosub *set_menu
 			loop
+
 			GoSub *Save_Set
+
 			swbreak
+
 		case ID_INDENT
 			auto_indent^1
 			GoSub *Save_Set
 			gosub *set_menu
+
 			swbreak
+
 		case ID_FORMAT
 			msgdlg rep_easy("設定を初期化して再起動を行ひます。\nよろしう御座いますか。\n(保存した File は削除せられません。)",kanzi,kana),"設定の初期化",$104,2
+
 			if stat==6{
 				gosub *format_set
 			}
+
 			swbreak
+
 		case ID_NEDIT
 			if used_box!=0{
 				gsel 0,1
@@ -1188,7 +1340,9 @@
 				width winx-ginfo_sizex+ginfo_winx+10,winy-ginfo_sizey+ginfo_winy+31,winpx,winpy
 				SetFocus hMesbox
 			}
+
 			swbreak
+
 		case ID_REDIT
 			if used_box!=1{
 				gsel 1,1
@@ -1199,29 +1353,42 @@
 				width winx-ginfo_sizex+ginfo_winx,winy-ginfo_sizey+ginfo_winy+21,winpx,winpy
 				SetFocus hRich
 			}
+
 			swbreak
+
 		case ID_SEARCH
 			gosub *search
+
 			swbreak
+
 		case ID_SNEXT
 			gosub *search_next
+
 			swbreak
+
 		case ID_SBACK
 			gosub *search_back
+
 			swbreak
+
 		case ID_REPLACE
 			gosub *replace_
+
 			swbreak
+
 		case ID_SEGKANA
 			kana=0
 			GoSub *Save_Set
 			gosub *set_menu
+
 			swbreak
 		case ID_OMKANA
 			kana=1
 			GoSub *Save_Set
 			gosub *set_menu
+
 			swbreak
+
 		case ID_SEGZI
 			kanzi=0
 			GoSub *Save_Set
@@ -1231,7 +1398,9 @@
 			GoSub *Screen_9
 			gsel used_box
 			gosub *set_menu
+
 			swbreak
+
 		case ID_LYAKUZI
 			kanzi=1
 			GoSub *Save_Set
@@ -1241,7 +1410,9 @@
 			gosub *Screen_9
 			gsel used_box
 			gosub *set_menu
+
 			swbreak
+
 		Case ID_PLAYVIEW
 			playview^1
 			GoSub *Save_Set
@@ -1249,29 +1420,41 @@
 			gSel 9,playview*2-1
 			Width,,view_px,view_py
 			gUnsel
+
 			SwBreak
+
 		Case ID_HSET
-			Exec2 dir_exe+"\\help.exe","/s
+			Exec2 dir_exe+"\\help.exe","/s"
+
 			SwBreak
+
 		Case ID_ABOUT
 			EnableWindow hwnd,0
 			gSel 10,1
 			gUnsel
+
 			SwBreak
+
 		Case ID_TWEET
 			Exec "https://twitter.com/intent/tweet?text=@Taker32X%20",16
+
 			SwBreak
+
 		Case ID_TOOLBAR
 			toolbar^1
 			GoSub *Save_Set
 			GoSub *set_menu
 			GoSub *label
 			GoSub *ShowOrHide
+
 			SwBreak
+
 		Default
 			SwBreak
 	swend
+
 	return
+
 
 *set_menu
 	newmenu the_menu,0
@@ -1287,6 +1470,7 @@
 		newmenu menu_tool,1
 		newmenu menu_help,1
 			NewMenu help_complain,1
+
 	addmenu the_menu,"&File",menu_file,$10
 		addmenu menu_file,"&N/新規作成\tCTRL+N",ID_NEW
 		addmenu menu_file,rep_easy("&L/讀込...\tCTRL+L",kanzi,kana),ID_LOAD
@@ -1298,6 +1482,7 @@
 		addmenu menu_file,"&U/ Page 設定...",ID_PAGE
 		addmenu menu_file,"",,$800
 		addmenu menu_file,"&Q/終了\tGRPH+f･4",ID_QUIT
+
 	addmenu the_menu,"&E/編輯",menu_edit,$10
 		addmenu menu_edit,"&U/元に戻す\tCTRL+Z",ID_UNDO
 		addmenu menu_edit,"",,$800
@@ -1312,31 +1497,32 @@
 		addmenu menu_edit,"&T/先頭行に移動\tCTRL+T",ID_TOP
 		addmenu menu_edit,"&B/最終行に移動\tCTRL+B",ID_BOTTOM
 		addmenu menu_edit,"&J/指定行に移動...\tSHIFT+f･5",ID_GOTO
+
 	addmenu the_menu,rep_easy("&S/檢索",kanzi,kana),menu_search,$10
 		addmenu menu_search,rep_easy("&F/文字列の檢索...\tCTRL+F",kanzi,kana),ID_SEARCH,(search_dialog!=0||replace_dialog!=0)*3
 		addmenu menu_search,rep_easy("&N/次を檢索\tf･3",kanzi,kana),ID_SNEXT
 		addmenu menu_search,rep_easy("&B/前を檢索\tSHIFT+f･3",kanzi,kana),ID_SBACK
 		addmenu menu_search,"&R/文字列の置換...\tCTRL+R",ID_REPLACE,(search_dialog!=0||replace_dialog!=0)*3
+
 	addmenu the_menu,"&V/表示",menu_view,$10
 		AddMenu menu_view,"&Toolbar",ID_TOOLBAR,toolbar*8
 		addmenu menu_view,"&S/ステイタス・バァ",ID_STATUS,in_status*8
-;		addmenu menu_view,"&W/右端で折り返す",ID_MESBOX,(used_box==0)*cuck_mbox*8+(used_box==1)*3
 		AddMenu menu_view,"",,$800
 		addmenu menu_view,rep_easy("&P/再生畫面",kanzi,kana),ID_PLAYVIEW,playview*8
+
 	addmenu the_menu,"&XIME",menu_xime,$10
 		addmenu menu_xime,"&C/コンパイル+再生\tf･5",ID_PLAY
 		addmenu menu_xime,"&P/再生\tf･6",ID_PLAYONLY
 		addmenu menu_xime,"&O/コンパイルのみ\tf･7",ID_COMPILE
 		AddMenu menu_xime,"",,$800
 		addmenu menu_xime,"&S/停止\tESC",ID_STOP
+
 	addmenu the_menu,"&T/道具",menu_tool,$10
-;		addmenu menu_tool,rep_easy("&I/ MIDI File から取り込む... [未實裝]",kanzi,kana),ID_INMIDI,3
 		addmenu menu_tool,"&O/ MIDI File を出力...\tCTRL+f･9",ID_MIDI
+
 	addmenu the_menu,"&O/オプション",menu_set,$10
 		addmenu menu_set,"&Font...",ID_FONT
-;		addmenu menu_set,rep_easy("&B/背景色... [未實裝]",kanzi,kana),ID_COLOUR,3
 		addmenu menu_set,"&A/自動インデント",ID_INDENT,auto_indent*8
-;		addmenu menu_set,"&E/エディタ [未實裝]",set_editor,$13
 			addmenu set_editor,"&N/標準 (メモ帳式)",ID_NEDIT,(used_box^1)*8
 			addmenu set_editor,"&R/リッチ・エディット (ワードパッド式)",ID_REDIT,used_box*8
 		addmenu menu_set,rep_easy("&T/字體",kanzi,kana),set_kanzi,$10
@@ -1346,33 +1532,42 @@
 			addmenu set_kana,rep_easy("&T/正假名遣",kanzi,0),ID_SEGKANA,(kana^1)*8
 			addmenu set_kana,rep_easy("&S/表音假名遣ひ",kanzi,1),ID_OMKANA,kana*8
 		addmenu menu_set,"&C/設定を初期化...",ID_FORMAT
+
 	addmenu the_menu,"&H/ヘルプ",menu_help,$10
 		addmenu menu_help,rep_easy("&H/ヘルプの表示...\tSHIFT+f･1",kanzi,kana),ID_HELP
 		AddMenu menu_help,"&S/ヘルプの設定...",ID_HSET
-;		AddMenu menu_help,Rep_Easy("&C/作者に文句を言ふ",kanzi,kana),help_complain,$10
-;			AddMenu help_complain,"&Twitter で送信...",ID_TWEET
 		AddMenu menu_help,"",,$800
 		AddMenu menu_help,"&A/ Version 情報...",ID_ABOUT
+
 	applymenu the_menu
+
 	return
+
 
 *shortcut
 	if windlg==0&&(ginfo_sel==0||ginfo_sel==1){
 		stbar_text "line : "+(msgline+1)
 	}
+
 	keybd=wparam and$ff
+
 	if keybd==0||lparam>>30!=0||(keybd<19&&keybd>15): return
+
 	getkey indexus,16
 	keybd or indexus<<8
 	getkey indexus,17
 	keybd or indexus<<9
+
 	if (ginfo_act==0||ginfo_act==1)&&(ginfo_sel==0||ginfo_sel==1){
 		Switch keybd
 			Case $200 or'A'
 				gosub *choose_all
+
 				SwBreak
+
 			Case $200 or'N'
 				gosub *hangout
+
 				if status{
 					text=""
 					text_hangout=text
@@ -1381,52 +1576,77 @@
 					if notedit: gosub *notedit_
 					gosub *set_menu
 				}
+
 				SwBreak
+
 			Case $200 or'L'
 			Case $200 or'O'
 				gosub *load
+
 				SwBreak
+
 			Case $200 or'S'
 				if filename!=""{
 					overwrite=1
 				}else{
 					overwrite=0
 				}
+
 				gosub *save
+
 				SwBreak
+
 			Case $200 or$100 or'S'
 				overwrite=0
 				gosub *save
+
 				SwBreak
+
 			Case $200 or 120
 				gosub *out_midi
+
 				SwBreak
+
 			Case 112
 				keybd_event 121,-1
+
 				SwBreak
+
 			Case 113
 				keybd_event 18,0
 				keybd_event 'E',-1
 				keybd_event 18,1
+
 				SwBreak
+
 			Case $200 or'P'
 				gosub *printout
+
 				SwBreak
+
 			Case $100 or 112
 				gosub *help
+
 				SwBreak
+
 			Case $200 or'T'
 				gosub *goto_top
 				keybd_event 17,0
+
 				SwBreak
+
 			Case $100 or 116
 				gosub *goto_line
+
 				SwBreak
+
 			Case $200 or'B'
 				keybd_event 17,1
 				gosub *goto_bottom
 				keybd_event 17,0
+
 				SwBreak
+
 			Case $00D
 			Case $10D
 			Case $20D
@@ -1435,6 +1655,7 @@
 						noteget dispos,msgline
 						sendmsg hMesbox,$B0
 						tab_indent=""
+
 						repeat strlen(dispos)
 							if peek(dispos,cnt)==9||peek(dispos,cnt)==32{
 								tab_indent+strf("%c",peek(dispos,cnt))
@@ -1442,27 +1663,34 @@
 								break
 							}
 						loop
+
 						wait 0
+
 						sendmsg hMesbox,$c2,,tab_indent
 						noteget dispos,msgline
+
 						if HowMany(dispos,"{")-HowMany(dispos,"}")+1>1&&strmid(dispos,strlen(dispos)-1,1)=="="{
 							keybd_event 9,-1
 						}
 					noteunsel
 				}
+
 				SwBreak
+
 			Case $100 or 221
 				if auto_indent{
 					notesel text
 						noteget dispos,msgline
 						sendmsg hMesbox,$b0,varptr(locate)
 						sendmsg hMesbox,$bb,msgline
+
 						repeat locate-stat
 							if strmid(dispos,cnt,1)=="\t"||strmid(dispos,cnt,1)==" "{
 								if cnt==locate-stat-1{
 									repeat 2
 										keybd_event 8,-1
 									loop
+
 									keybd_event 221,-1
 								}
 							}else{
@@ -1471,29 +1699,41 @@
 						loop
 					noteunsel
 				}
+
 				SwBreak
+
 			Case 115
 			Case $200 or'F'
 				gosub *search
+
 				SwBreak
+
 			Case 114
 				gosub *search_next
+
 				SwBreak
+
 			Case $100 or 114
 				gosub *search_back
+
 				SwBreak
+
 			Case $200 or'R'
 				gosub *replace_
+
 				SwBreak
 		SwEnd
 	}
+
 	If ginfo_act==0{
 		If keybd==45{
 			If insert==0{
-				Dialog Rep_Easy("插入モードに切り替へますか。\n(現時點では完全な動作を確認してゐません。)",kanzi,kana),2,"確認
+				Dialog Rep_Easy("插入モードに切り替へますか。\n(現時點では完全な動作を確認してゐません。)",kanzi,kana),2,"確認"
+
 				If stat==6{
 					insert=1
 				}
+
 				ObjSel 0
 			}Else{
 				SendMsg hMesbox,$B0,VarPtr(work),0
@@ -1501,14 +1741,8 @@
 				insert=0
 			}
 		}
-;		GetKey work3,16
-;		Wait 0
-;		If work3{
-;			If '0'<=keybd&&keybd<='9'||('A'<=keybd&&keybd<='Z'){
-;				Keybd_Event 46,-1
-;			}
-;		}
 	}
+
 	If ginfo_act==0||ginfo_act==1||gInfo_Act==9{
 		Switch keybd
 			Case 27
@@ -1517,74 +1751,100 @@
 				OnCmd 1
 				playview_start=-65536
 				NewPlayView
+
 				SwBreak
+
 			Case 116
 			Case 123
 				SwitchCheck 0
+
 				SwBreak
+
 			Case 117
 				SwitchCheck 1
+
 				SwBreak
+
 			Case 118
 				SwitchCheck 2
+
 				SwBreak
+
 		SwEnd
 	}Else{
 		Switch keybd
 			Case 13
 				GoSub label_return(ginfo_act)
+
 				SwBreak
+
 			Case 27
 				GoSub label_close(ginfo_act)
+
 				SwBreak
 		SwEnd
 	}
+
 	return
+
 
 *choose_all
 	sendmsg (used_box==0)*hMesbox+(used_box==1)*hRich,$b1,0,-1
+
 	return
+
 
 *hangout
 	dim status
+
 	if text_hangout!=text{
 		msgdlg rep_easy("内容が變更せられてゐます。\n保存しますか。",kanzi,kana),"確認",3+$200,2
 		dialog_choice=stat
+
 		if dialog_choice==2: status=0
+
 		if dialog_choice==6{
 			if filename!=""{
 				overwrite=1
 			}else{
 				overwrite=0
 			}
+
 			gosub *save
 			dim overwrite
 		}
+
 		if dialog_choice==7{
 			status=1
 		}
 	}else{
 		status=1
 	}
+
 	dim dialog_choice
+
 	return
+
 
 *save
 	if overwrite{
 		notesel text
 			notesave filename
 		NoteUnsel
+
 		text_hangout=text
 		status=1
 	}else{
 		notesel text
 			dialog "xim",17
+
 			if stat{
 				if getpath(refstr,2)==""{
-					filename=refstr+".xim
+					filename=refstr+".xim"
 				}else{
 					filename=refstr
 				}
+
 				notesave filename
 				text_hangout=text
 				status=1
@@ -1592,9 +1852,12 @@
 				status=0
 			}
 		NoteUnsel
+
 		gosub *set_menu
 	}
+
 	return
+
 
 *vofari
 	if iparam==0{
@@ -1603,25 +1866,34 @@
 			Case 1
 				gosub *save_set
 				gosub *hangout
+
 				if status{
 					gSel 0
 					OnCmd 0
 					KillTimer hwnd,1
 					End
 				}
+
 				SwBreak
+
 			Case 9
 				playview=0
 				GoSub *Save_Set
 				GoSub *set_menu
 				gSel 9,-1
 				gUnsel
+
 				SwBreak
+
 			Default
 				GoSub label_close(wparam)
+
+				SwBreak
 		SwEnd
 	}
+
 	return
+
 
 *save_set
 	writeset "window","sizex",winx
@@ -1636,12 +1908,12 @@
 	writeset "font","style",fontstyle
 	WriteSet "object","toolbar",toolbar
 	writeset "object","stbar",in_status
-;	writeset "object","return",cuck_mbox
 	writeset "object","indent",auto_indent
-;	writeset "object","rich",used_box
 	writeset "string","zitai",kanzi
 	writeset "string","kana",kana
+
 	return
+
 
 *load_set
 	readset "window","sizex",winx,10
@@ -1656,165 +1928,99 @@
 	readset "font","style",fontstyle,3
 	ReadSet "object","toolbar",toolbar,2
 	readset "object","stbar",in_status,2
-;	readset "object","return",cuck_mbox,2
 	readset "object","indent",auto_indent,2
-;	readset "object","rich",used_box,2
 	readset "string","zitai",kanzi,2
 	readset "string","kana",kana,2
+
 	if winpx>=ginfo_dispx{
 		winpx=(ginfo_dispx-winx)/2
 	}
+
 	if ginfo_dispy>winpy{
-		let_int winpy
+		LetInt winpy
 	}else{
 		winpy=(ginfo_dispy-winy)/2
 	}
+
 	if view_px>=ginfo_dispx{
 		view_px=winpx+48
 	}
+
 	if ginfo_dispy>view_py{
-		let_int view_py
+		LetInt view_py
 	}else{
 		view_py=winpy+64
 	}
+
 	return
 
+
 *out_midi
-	dialog "mid;*.midi",17,"スタンダァド MIDI File
+	dialog "mid;*.midi",17,"スタンダァド MIDI File"
+
 	if stat{
 		GoCompile
+
 		if stat{
 			gosub *comperr
+
 			return
 		}
+
 		Dup sheet,mmllist@modxime(0)
-/*			sdim binary_data,25+notemax*7+3
-			scale_data='M','T','h','d',0,0,0,6,0,0,0,1,1,244,'M','T','r','k',0,0,0,0
-			byte=Length(scale_data)
-			foreach scale_data
-				poke binary_data,cnt,scale_data(cnt)
-			loop
-			repeat notemax
-				if cnt{
-					noteget sheet_data_,cnt-1
-				}else{
-					sheet_data_="0:0:0:0"
-				}
-				noteget sheet_data,cnt
-				split sheet_data,":",time,ch,no,vel
-				split sheet_data_,":",time_
-				time=0+time
-				ch=0+ch
-				vel=0+vel
-				range_time=time-time_>>7
-				repeat range_time+1
-					naru(cnt)=time-time_>>7*cnt and$7F
-				loop
-				repeat limit(range_time,0)
-					if naru(range_time-cnt)!=0{
-						poke binary_data,byte,naru(range_time-cnt)or$80
-						byte+
-					}
-				loop
-				poke binary_data,byte,naru(0)
-				byte+
-				if strmid(no,0,1)=="@"{
-					poke binary_data,byte,$c0+ch
-					poke binary_data,byte+1,0+strmid(no,1,strlen(no)-1)
-					byte+2
-				}else: if strmid(no,0,1)=="P"{
-					poke binary_data,byte,$b0+ch
-					poke binary_data,byte+1,$0a
-					poke binary_data,byte+2,0+strmid(no,1,strlen(no)-1)
-					byte+3
-				}else{
-					no=0+no
-					poke binary_data,byte+1,no
-					if vel{
-						poke binary_data,byte,$90 or ch
-						poke binary_data,byte+2,vel
-					}else{
-						poke binary_data,byte,$80 or ch
-						poke binary_data,byte+2,0
-					}
-					byte+3
-				}
-			loop
-		NoteUnsel
-		if vartype(mml_title@modxime)==2{
-			poke binary_data,byte,0
-			poke binary_data,byte+1,$ff
-			poke binary_data,byte+2,3
-			byte+3
-			repeat 4
-				naru(cnt)=strlen(mml_title@modxime)>>7*cnt and$7F
-			loop
-			repeat 3
-				if naru(3-cnt)!=0{
-					poke binary_data,byte,naru(3-cnt)or$80
-					byte+
-				}
-			loop
-			poke binary_data,byte,naru(0)
-			byte+
-			repeat strlen(mml_title@modxime)
-				poke binary_data,byte,peek(mml_title@modxime,cnt)
-				byte+
-			loop
-		}
-		poke binary_data,byte,0
-		poke binary_data,byte+1,$ff
-		poke binary_data,byte+2,$2f
-		poke binary_data,byte+3,0 */
 		sdim binary_data,25+VarSize(sheet)
 		scale_data='M','T','h','d',0,0,0,6,0,0,0,1,1,244,'M','T','r','k',0,0,0,0
 		byte=Length(scale_data)
+
 		foreach scale_data
 			poke binary_data,cnt,scale_data(cnt)
 		loop
-		repeat mmlsize@modxime(0)/11/*
-			if cnt{
-				noteget sheet_data_,cnt-1
-			}else{
-				sheet_data_="0:0:0:0"
-			}*/
-;			noteget sheet_data,cnt
-;			split sheet_data,":",time,ch,no,vel
+
+		repeat mmlsize@modxime(0)/11
 			time=lPeek(sheet,cnt*11)
 			ch=Peek(sheet,cnt*11+4)and$0F
 			no=Peek(sheet,cnt*11+5)
 			vel=Peek(sheet,cnt*11+6)
-;			split sheet_data_,":",time_
+
 			If cnt>0{
 				time_=lPeek(sheet,(cnt-1)*11)
 			}Else{
 				time_=0
 			}
+
 			repeat (time-time_)/128+1
 				naru(cnt)=Int(Double(time-time_)/powf(128,cnt))\128
 			loop
+
 			repeat limit((time-time_)/128,0)
 				if naru((time-time_)/128-cnt)!=0{
 					poke binary_data,byte,naru((time-time_)/128-cnt)+$80
 					byte+
 				}
 			loop
+
 			poke binary_data,byte,naru(0)
 			byte+
+
 			Switch (Peek(sheet,cnt*11+4)and$F0)>>4
 				Case 1
 					poke binary_data,byte,$c0 or ch
 					poke binary_data,byte+1,no
 					byte+2
+
 					SwBreak
+
 				Case 2
 					poke binary_data,byte,$B0 or ch
 					poke binary_data,byte+1,$0A
 					poke binary_data,byte+2,no
 					byte+3
+
 					SwBreak
+
 				Default
 					poke binary_data,byte+1,no
+
 					if vel{
 						poke binary_data,byte,$90 or ch
 						poke binary_data,byte+2,vel
@@ -1822,72 +2028,92 @@
 						poke binary_data,byte,$80 or ch
 						poke binary_data,byte+2,0
 					}
+
 					byte+3
+
 					SwBreak
 			SwEnd
 		loop
+
 		if vartype(mml_title@modxime)==2{
 			poke binary_data,byte,0
 			poke binary_data,byte+1,$FF
 			poke binary_data,byte+2,3
 			byte+3
+
 			repeat 4
 				naru(cnt)=strlen(mml_title@modxime)/powf(128,cnt)\128
 			loop
+
 			repeat 3
 				if naru(3-cnt)!=0{
 					poke binary_data,byte,naru(3-cnt)+$80
 					byte+
 				}
 			loop
+
 			poke binary_data,byte,naru(0)
 			byte+
+
 			repeat strlen(mml_title@modxime)
 				poke binary_data,byte,peek(mml_title@modxime,cnt)
 				byte+
 			loop
 		}
+
 		poke binary_data,byte,0
 		poke binary_data,byte+1,$ff
 		poke binary_data,byte+2,$2f
 		poke binary_data,byte+3,0
 		byte+4
+
 		repeat 4
 			poke binary_data,cnt+18,(byte-22)/powf(256,3-cnt)\256
 		loop
+
 		if getpath(refstr,2)==""{
 			filename_midi=refstr+".mid"
 		}else{
 			filename_midi=refstr
 		}
+
 		bsave filename_midi,binary_data,byte
-		dialog "MIDI 出力が完了しました。\n["+filename_midi+"]",0,"MIDI 出力
+		dialog "MIDI 出力が完了しました。\n["+filename_midi+"]",0,"MIDI 出力"
 	}
 	return
+
 
 *in_midi
 	return
 
+
 *load
 	gosub *hangout
+
 	if status{
 		notesel text
 			dialog "xim",16
+
 			if stat{
 				if getpath(refstr,2)==""{
 					filename=refstr+".xim"
 				}else{
 					filename=refstr
 				}
+
 				noteload filename
 				text_hangout=text
 				objprm 0,text
+
 				if notedit: gosub *notedit_
+
 				gosub *set_menu
 			}
 		noteunsel
 	}
+
 	return
+
 
 *notedit_
 	notedit^1
@@ -1896,103 +2122,147 @@
 	gosub *set_mesbox
 	gosub *set_menu
 	GoSub *Label
+
 	return
+
 
 *comperr
 	switch stat
 		case 1
-			ErrorMes "マクロの記述に誤りが有ります。
+			ErrorMes "マクロの記述に誤りが有ります。"
+
 			swbreak
+
 		case 2
-			ErrorMes "異常なアトリビュト値が有ります。
+			ErrorMes "異常なアトリビュト値が有ります。"
+
 			swbreak
+
 		case 3
-			ErrorMes "異常な音長が有ります。
+			ErrorMes "異常な音長が有ります。"
+
 			swbreak
+
 		case 4
-			ErrorMes "異常なオクタヴが有ります。
+			ErrorMes "異常なオクタヴが有ります。"
+
 			swbreak
+
 		case 5
-			ErrorMes "異常なチャンネル値が有ります。
+			ErrorMes "異常なチャンネル値が有ります。"
+
 			swbreak
+
 		case 6
 			ErrorMes rep_easy("異常なプログラム・チェインジ番號が有ります。",kanzi,kana)
+
 			swbreak
+
 		case 7
-			ErrorMes "Loop の記述に誤りが有ります。
+			ErrorMes "Loop の記述に誤りが有ります。"
+
 			swbreak
+
 		case 8
 			ErrorMes rep_easy("Loop 外で \"/\" が使はれてゐます。",kanzi,kana)
+
 			swbreak
+
 		case 9
-			ErrorMes "Loop のネストが深すぎます。
+			ErrorMes "Loop のネストが深すぎます。"
+
 			swbreak
+
 		case 10
 			ErrorMes rep_easy("定義濟みのマクロを定義しようとしてゐます。",kanzi,kana)
+
 			swbreak
+
 		case 11
 			ErrorMes Rep_Easy("未定義のマクロを展開しようとしてゐます。",kanzi,kana)
+
 			swbreak
+
 		Case 12
 			ErrorMes Rep_Easy("範圍外の音階が有ります。",kanzi,kana)
+
 			SwBreak
 	swend
+
 	objsel 0
+
 	return
 
+
 *help
-	Exec2 Dir_Exe+"\\help.exe","
+	Exec2 Dir_Exe+"\\help.exe",""
+
 	return
+
 
 *printout
 	if cannot_printout{
-		dialog rep_easy("hspprint.dll が見つからないため印刷を行はれません。",kanzi,kana),1,"エラー
+		dialog rep_easy("hspprint.dll が見つからないため印刷を行はれません。",kanzi,kana),1,"エラー"
+
 		return
 	}
+
 	if pnum==0{
-		dialog rep_easy("利用可能なプリンタが見つからないため印刷を行はれません。",kanzi,kana),1,"エラー
+		dialog rep_easy("利用可能なプリンタが見つからないため印刷を行はれません。",kanzi,kana),1,"エラー"
+
 		return
 	}
+
 	gsel used_box
 	wx_=ginfo_wx1
 	wy_=ginfo_wy1
 	EnableWindow hwnd,0
 	propprn sx,sy,useid,0
 	propprn sx_,sy_,useid,3
-	#ifdef _DEBUG
-		sx=6300:sy=8910
-		sx_=210:sy_=297
-	#endif
+#ifdef _DEBUG
+	sx=6300:sy=8910
+	sx_=210:sy_=297
+#endif
 	sx=limit(sx,1):sy=limit(sy,1)
 	sx_=limit(sx_,1):sy_=limit(sy_,1)
 	pmx_time=1.*sx/sx_
 	pmy_time=1.*sy/sy_
 	print_text=text+"\n"
 	strrep print_text,"\t","        "
+
 	NoteSel print_text
 		For i,0,notemax
 			noteget test_data,i
+
 			if print_width*2<strlen(test_data){
 				noteadd strmid(test_data,print_width*2,strlen(test_data)-print_width*2),i+1,0
 			}
+
 			NoteAdd strmid(test_data,0,print_width*2),i,1
 		Next
+
 		pagemax=(notemax-1)/print_height+1
 	NoteUnsel
+
 	gsel 2
 	width ,,wx_+16,wy_+16
 	gsel 2,1
+
 	return
+
 
 *DrawPreview
 	buffer 3,sx,sy
 	font print_fname,(pmx_time+pmy_time)*pt2mm(print_pts)/2
 	color 0,0,0
+
 	notesel print_text
 		for i,0,Limit(print_height,0,notemax-(page-1)*print_height)
 			noteget test_data,(page-1)*print_height+i
+
 			repeat strlen(test_data)
 				dat_byte=peek(test_data,cnt)
+
 				if char_full{
 					char_full=0
 				}else{
@@ -2008,43 +2278,58 @@
 			loop
 		next
 	noteunsel
+
 	color 255,255,255
+
 	repeat 4
 		boxf (cnt==3)*(-pmx_time*print_right+ginfo_sx),(cnt==1)*(-pmy_time*print_bottom+ginfo_sy),(cnt!=2)*ginfo_sx+(cnt==2)*(pmx_time*print_left)-1,(cnt!=0)*ginfo_sy+(cnt==0)*(pmy_time*print_top)-1
 	loop
+
 	gUnsel
+
 	Return
+
 
 *set_printer
 	prndialog useid
+
 	return
+
 
 *go_printout
 	if filename!=""{
 		doc_name=getpath(filename,8)
 	}else{
-		doc_name="(無題)
+		doc_name="(無題)"
 	}
+
 	For page,1,pagemax+1
 		GoSub *DrawPreview
 		gsel 3
 		execprn useid,0,0,sx,sy,0,0,sx,sy,doc_name
 	Next
+
 	gosub *print_end
+
 	return
 
+
 *update_pinfo
-	exist dir_exe+"\\hspprint.dll
+	exist dir_exe+"\\hspprint.dll"
+
 	if strsize==-1{
 		cannot_printout=1
+
 		return
 	}
+
 	syscolor 4
 	boxf
 	syscolor 7
 	enumprn plist
 	pnum=stat
 	getdefprn def_printer
+
 	notesel plist
 		repeat pnum
 			noteget s1,cnt
@@ -2054,6 +2339,7 @@
 			}
 		loop
 	noteunsel
+
 	objsize 480
 	objmode 2,1
 	pos (ginfo_winx-480)/2,16
@@ -2063,20 +2349,26 @@
 	button gosub "印刷 Preview",*print_view
 	button gosub "プリンタの設定",*set_printer
 	button gosub "プリンタ情報の更新",*update_pinfo
+
 	return
+
 
 *print_end
 	gsel 2,-1
 	gsel used_box,1
 	EnableWindow hwnd,1
+
 	return
+
 
 *view_end
 	gsel 4,-1
 	gsel used_box,1
 	EnableWindow hwnd,1
 	windlg=0
+
 	return
+
 
 *print_view
 	windlg=1
@@ -2086,7 +2378,7 @@
 	gsel used_box
 	EnableWindow hwnd,0
 	gsel 4
-	title "印刷 Preview
+	title "印刷 Preview"
 	width double(sx)/(1.1*sy/(ginfo_dispy-24)),1f*(ginfo_dispy-24)/1.1+24,(pos_taskbar()==2)*width_taskbar(),(pos_taskbar()==1)*height_taskbar()
 	Pos 0,0
 	gZoom ginfo_winx,ginfo_winy-24,3,0,0,sx,sy,1
@@ -2108,34 +2400,48 @@
 	Button GoSub ">|",*MovePage
 	ObjEnable stat,pagemax>1
 	gSel 4,1
+
 	Return
+
 
 *MovePage
 	Switch stat
 		Case 0
 			page=1
+
 			SwBreak
+
 		Case 1
 			page=Limit(page-1,1)
+
 			SwBreak
+
 		Case 3
 			page=Limit(page+1,,pagemax)
+
 			SwBreak
+
 		Case 4
 			page=pagemax
+
 			SwBreak
 	SwEnd
+
 	Repeat 2
 		ObjEnable cnt,page>1
 	Loop
+
 	Repeat 2,3
 		ObjEnable cnt,page<pagemax
 	Loop
+
 	ObjPrm 2,page
 	GoSub *DrawPreview
 	Pos 0,0
 	gZoom ginfo_winx,ginfo_winy-24,3,0,0,sx,sy,1
+
 	Return
+
 
 *win_dialog
 	SetWindowLong hwnd,-16,GetWindowLong(hwnd,-16)and$70000^GetWindowLong(hwnd,-16)
@@ -2145,7 +2451,9 @@
 	DeleteMenu GetSystemMenu(hwnd),$f020
 	DeleteMenu GetSystemMenu(hwnd),$f030
 	DeleteMenu GetSystemMenu(hwnd),$f120
+
 	return
+
 
 *page_ok
 	print_width=print_width_
@@ -2157,7 +2465,9 @@
 	print_pts=print_pts_
 	print_fname=print_fname_
 	gosub *page_end
+
 	return
+
 
 *page_end
 	gsel 5,-1
@@ -2171,17 +2481,23 @@
 	objprm 9,print_fname
 	gsel used_box,1
 	EnableWindow hwnd,1
+
 	return
+
 
 *print_font
 	fontdlg dispos
+
 	if stat{
 		print_fname_=refstr
 		print_pts_=dispos(2)
 	}
+
 	objprm 9,print_fname_
 	objint print_pts_,8
+
 	return
+
 
 *make_mesbox
 	cuck_mbox^1
@@ -2189,7 +2505,9 @@
 	pos 0,0
 	gosub *set_mesbox
 	gosub *set_menu
+
 	return
+
 
 *goto_top
 	if used_box==0{
@@ -2198,7 +2516,9 @@
 		sendmsg hRich,$b1
 		sendmsg hRich,$b7
 	}
+
 	return
+
 
 *goto_line
 	gsel used_box
@@ -2210,26 +2530,33 @@
 	width ,,wx_+8,wy_+45
 	gsel 6,1
 	objsel 0
+
 	return
+
 
 *gline_ok
 	gline_ok_=1
 	gosub *gline_end
+
 	return
+
 
 *gline_end
 	gsel 6,-1
 	gsel used_box,1
 	EnableWindow hwnd,1
 	objsel 0
+
 	if gline_ok_{
 		if used_box==0{
 			notesel text
 				go_line=0
+
 				repeat what_line-1
 					noteget work,cnt
 					go_line+strlen(work)+2
 				loop
+
 				go_line=strlen_index(box_index,strmid(text,0,go_line))
 				sendmsg hMesbox,$b1,go_line,go_line
 			noteunsel
@@ -2244,20 +2571,26 @@
 			sendmsg hRich,$b1,go_line(0),go_line(1)-2
 			sendmsg hRich,$b7,0,go_line(0)
 		}
+
 		gline_ok_=0
 	}
+
 	return
+
 
 *goto_bottom
 	if used_box==0{
 		sendmsg hMesbox,$ba
 		line_max=stat
+
 		notesel text
 			go_line=0
+
 			repeat line_max-1
 				noteget work,cnt
 				go_line+strlen(work)+2
 			loop
+
 			go_line=strlen_index(box_index,strmid(text,0,go_line))
 			sendmsg hMesbox,$b1,go_line,go_line
 		noteunsel
@@ -2269,23 +2602,31 @@
 		sendmsg hRich,$b1,go_line,go_line
 		sendmsg hRich,$b7
 	}
+
 	return
+
 
 *set_msgline
 	sendmsg (used_box==0)*hMesbox or(used_box==1)*hRich,$c9,-1
 	msgline=stat
+
 	return
+
 
 *set_mesbox
 	mesbox text,ginfo_winx,ginfo_winy-stbar_sy@stbar(ginfo_sel)*in_status,5-notedit-4*cuck_mbox
 	hMesbox=objinfo_hwnd(stat)
+
 	return
 
+
 *make_bone
-	prgname="ХIME Macro Editor
+	prgname="ХIME Macro Editor"
 	width winx-(ginfo_sizex-ginfo_winx),winy-(ginfo_sizey-ginfo_winy),winpx,winpy
 	SetWindowLong hwnd,-16,GetWindowLong(hwnd,-16)or$10000 or$40000
+
 	return
+
 
 *chg_font
 	sendmsg hRich,$b1,0,-1
@@ -2298,51 +2639,66 @@
 	poke cFormat,24,$80
 	poke cFormat,26,fontname
 	logfont=bmscr(39)
+
 	if bmscr(38)!=logfont{
 		logfont=bmscr(38)
 		GetObject holdfon,60,lf
 		hFont=CreateFontIndirect(lf)
 	}
+
 	sendmsg hRich,$30,hFont,1
 	sendmsg hRich,$444,1,varptr(cFormat)
 	sendmsg hRich,$b1
 	SetFocus hRich
+
 	return
+
 
 *format_set
 	gosub *normal_set
 	gosub *save_set
 	GoSub *hangout
+
 	If status{
-		#ifndef _DEBUG
-			Run "start.ax
-		#else
-			End
-		#endif
+#ifndef _DEBUG
+		Run "start.ax"
+#else
+		End
+#endif
 	}
+
 	return
+
 
 *search_next
 	repeat 2
 		gsel 7
 		sendmsg objinfo_hwnd(5-cnt),$f0
+
 		if stat{
 			searching cnt
 		}
+
 		gsel used_box,1
 	loop
+
 	return
+
 
 *search_back
 	repeat 2
 		gsel 7
 		sendmsg objinfo_hwnd(4+cnt),$f0
+
 		if stat{
 			searching cnt
 		}
+
 		gsel used_box,1
 	loop
+
 	return
+
 
 *search
 	search_dialog=1
@@ -2351,13 +2707,17 @@
 	gsel 7,1
 	SearchUpdate 0
 	width,,winpx+80,winpy+64
+
 	Repeat 2,4
 		ObjSel cnt
 		Wait 0
 	Loop
+
 	objsel 0
 	gunsel
+
 	return
+
 
 *search_end
 	search_dialog=0
@@ -2365,10 +2725,13 @@
 	gsel used_box,1
 	GoSub *set_menu
 	GoSub *ShowOrHide
+
 	if used_box==0{
 		objsel 0
 	}
+
 	return
+
 
 *normal_set
 	winx=640+(ginfo_sizex-ginfo_winx)
@@ -2378,7 +2741,7 @@
 	playview=0
 	view_px=winpx+48
 	view_py=winpy+64
-	fontname="FixedSys
+	fontname="FixedSys"
 	fontsize=19
 	fontstyle=0
 	toolbar=0
@@ -2388,7 +2751,9 @@
 	used_box=0
 	kanzi=1
 	kana=1
+
 	return
+
 
 *replace_
 	replace_dialog=1
@@ -2399,7 +2764,9 @@
 	width,,winpx+80,winpy+64
 	objsel 0
 	gunsel
+
 	return
+
 
 *replace_all
 	if used_box==0{
@@ -2407,7 +2774,9 @@
 			GoSub *replacing@taker
 		Until search_pos==-1
 	}
+
 	return
+
 
 *replace_end
 	replace_dialog=0
@@ -2415,15 +2784,18 @@
 	gunsel 1
 	GoSub *set_menu
 	GoSub *ShowOrHide
+
 	if used_box==0{
 		objsel 0
 	}
+
 	return
+
 
 *screen_5
 	screen 5,18*16,17*16+32,SCREEN_HIDE or SCREEN_FIXEDSIZE
 	gosub *win_dialog
-	title "Page 設定
+	title "Page 設定"
 	syscolor 4
 	boxf
 	syscolor 7
@@ -2486,28 +2858,36 @@
 	objint print_right_,6
 	objint print_bottom_,7
 	objint print_pts_,8
+
 	return
+
 
 *screen_7
 	screen 7,484,111,SCREEN_HIDE*(search_dialog==0)or SCREEN_FIXEDSIZE
 	gosub *win_dialog
 	title rep_easy("檢索",kanzi,kana)
 	SearchDialog 0
+
 	return
+
 
 *screen_8
 	screen 8,484,137,SCREEN_HIDE*(replace_dialog==0)or SCREEN_FIXEDSIZE
 	gosub *win_dialog
-	title "置換
+	title "置換"
 	SearchDialog 1
+
 	return
+
 
 *Screen_9
 	screen 9,492,320,SCREEN_HIDE or SCREEN_FIXEDSIZE or SCREEN_TOOL
 	gosub *win_dialog
 	Title Rep_Easy("再生畫面",kanzi,kana)
 	cls 4
+
 	Return
+
 
 *DropFiles
 	hDrop=wparam
@@ -2515,13 +2895,17 @@
 	DragQueryFile hDrop,0,dropped,260
 	Load2 dropped
 	DragFinish hDrop
+
 	Return
+
 
 *AboutEnd
 	gSel 10,-1
 	gUnsel
 	EnableWindow hwnd,1
+
 	Return
+
 
 *WindowTimer
 	if windlg==0&&(ginfo_sel==0||ginfo_sel==1){
@@ -2530,16 +2914,21 @@
 		}else{
 			addchr=""
 		}
+
 		if filename==""{
 			title prgname+" - (無題)"+addchr
 		}else{
 			title prgname+" - "+getpath(filename,8)+addchr
 		}
+
 		gosub *set_msgline
+
 		if msgline!=msgline_hangout{
 			stbar_text "line : "+(msgline+1)
 		}
+
 		msgline_hangout=msgline
+
 		if (IsZoomed(mwhw(used_box))||IsIconic(mwhw(used_box)))==0{
 			winx=ginfo_sizex
 			winy=ginfo_sizey
@@ -2547,31 +2936,35 @@
 			winpy=ginfo_wy1
 		}
 	}
-	#ifdef _DEBUG
-		If ginfo_sel!=gsel_works||ginfo_act!=active_work{
-			LogMes StrF("Select: %d, Active: %d",ginfo_sel,ginfo_act)
-			gsel_works=ginfo_sel
-			active_work=ginfo_act
-		}
-	#endif
+
+#ifdef _DEBUG
+	If ginfo_sel!=gsel_works||ginfo_act!=active_work{
+		LogMes StrF("Select: %d, Active: %d",ginfo_sel,ginfo_act)
+		gsel_works=ginfo_sel
+		active_work=ginfo_act
+	}
+#endif
+
 	If ginfo_act!=active_work&&ginfo_sel==0{
 		GoSub *Load_Set
 		GoSub *Set_Menu
 		active_work=ginfo_act
 	}
+
 	If blx!=(BoxLength((used_box==0)*hMesBox+(used_box==1)*hRich)==0)&&ginfo_sel==0{
 		GoSub *set_menu
 		blx=BoxLength((used_box==0)*hMesBox+(used_box==1)*hRich)==0
 	}
+
 	If search_dialog!=0||replace_dialog!=0{
 		gSel 7+(replace_dialog!=0)
+
 		If regexp@taker{
 			ObjPrm 2+(replace_dialog!=0),1
-;			ObjEnable 2+(replace_dialog!=0),0
 		}Else{
 			ObjPrm 2+(replace_dialog!=0),0
-;			ObjEnable 2+(replace_dialog!=0),1
 		}
+
 		gUnsel
 	}
 	If playview{
@@ -2581,37 +2974,34 @@
 		ReDraw 0
 		Color 0,0,0
 		BoxF
+
 		If VarType(sheet@modxime)==2{
-;			If InStr(sheet@modxime,0,":")!=-1{
-;				NoteSel sheet@modxime
-					Repeat put_byte@modxime/11-playview_max,playview_max
-;						NoteGet work,cnt
-;						Split work,":",work2
-						work2=lPeek(sheet@modxime,cnt*11)
-						If THE_TIME-playview_start>=work2{
-;							Switch StrMid(work2(2),0,1)
-							Switch (Peek(sheet@modxime,cnt*11+4)and$F0)>>4
-								Case 1
-								Case 2
-								Case 3
-									Continue
-									SwBreak
-							SwEnd
-							playview_v(Peek(sheet@modxime,cnt*11+5),Peek(sheet@modxime,cnt*11+4)and$0F)=Peek(sheet@modxime,cnt*11+6)
-							playview_max=cnt
-						}Else{
-							Break
-						}
-					Loop
-;				NoteUnsel
-;			}
+			Repeat put_byte@modxime/11-playview_max,playview_max
+				work2=lPeek(sheet@modxime,cnt*11)
+
+				If THE_TIME-playview_start>=work2{
+					Switch (Peek(sheet@modxime,cnt*11+4)and$F0)>>4
+						Case 1
+						Case 2
+						Case 3
+							Continue
+					SwEnd
+
+					playview_v(Peek(sheet@modxime,cnt*11+5),Peek(sheet@modxime,cnt*11+4)and$0F)=Peek(sheet@modxime,cnt*11+6)
+					playview_max=cnt
+				}Else{
+					Break
+				}
+			Loop
 		}
+
 		Repeat 16
 			Color 255,255,255
 			Pos 0,20*cnt
 			PrintS StrF("CH%X",cnt),msGothic,20
 			cnt_=cnt
 			work=0
+
 			Repeat 75
 				Switch work\12
 					Case 1
@@ -2620,23 +3010,31 @@
 					Case 8
 					Case 10
 						work+
+
 						SwBreak
 				SwEnd
+
 				Color 255,255-2*playview_v(work,cnt_),255-2*playview_v(work,cnt_)
 				BoxF 40+cnt*6,20*cnt_+1,44+cnt*6,20*cnt_+18
 				work+
 			Loop
+
 			Color 0,0,0
 			work=0
+
 			Repeat 74
 				Switch cnt\7
 					Case 2
-						work+
+						work += 2
+
+						Continue
+
 					Case 6
 						work+
+
 						Continue
-						SwBreak
 				SwEnd
+
 				Switch work\12
 					Case 0
 					Case 2
@@ -2646,20 +3044,24 @@
 					Case 9
 					Case 11
 						work+
+
 						SwBreak
 				SwEnd
+
 				Color playview_v(work,cnt_)*2,0,0
 				BoxF cnt*6+43,20*cnt_+1,cnt*6+47,20*cnt_+9
 				work+
 			Loop
 		Loop
+
 		ReDraw 1
 		gUnsel
 	}
+
 	If ginfo_act==0&&insert!=0{
 		SendMsg hMesbox,$B0,VarPtr(work),VarPtr(work2)
-;		GetKey work3,16
 		work3=0	; 現時點では挿入を優先する事。
+
 		If work2==work{
 			If work3==0{
 				shift_on=0
@@ -2674,12 +3076,16 @@
 			}
 		}
 	}
+
 	Return
 
+
 *SetToolbar
-	bmp_name="toolbar
+	bmp_name="toolbar"
+
 	Repeat
-		Exist dir_cur+"\\"+bmp_name+".bmp
+		Exist dir_cur+"\\"+bmp_name+".bmp"
+
 		If strsize==-1{
 			Buffer 32
 			PicLoad "toolbar.png"
@@ -2687,15 +3093,17 @@
 			BoxF
 			Pos 0,0
 			PicLoad "toolbar.png",1
-			bmpSave dir_cur+"\\"+bmp_name+".bmp
+			bmpSave dir_cur+"\\"+bmp_name+".bmp"
 			gSel 0
+
 			Break
 		}Else{
 			bmp_name+
 		}
 	Loop
+
 	ToolInit bmp_name+".bmp",16,16,7
-	Delete bmp_name+".bmp
+	Delete bmp_name+".bmp"
 	ToolAdd ID_NEW
 	ToolAdd ID_LOAD
 	ToolAdd ID_SAVE
@@ -2706,7 +3114,9 @@
 	ToolAdd ID_PLAY
 	ToolAdd ID_STOP
 	ToolApply *Command_
+
 	Return
+
 
 *ShowOrHide
 	If toolbar{
@@ -2714,19 +3124,11 @@
 	}Else{
 		ToolHide
 	}
+
 	SendMsg hToolbar@Toolbar,$401,ID_SEARCH,search_dialog==0&&replace_dialog==0
+
 	Return
 
-*SoftErr
-	If err==3{
-		Stop
-	}
-	MsgDlg "内部エラーが發生しました。\n"+StrF("Error %d",err),"エラー",0,1
-	gSel 0
-	OnCmd 0
-	KillTimer hwnd,1
-;	Stop
-	End
 
 *Dummy
 	Return
